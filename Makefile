@@ -9,7 +9,7 @@ clean:
 
 server: main.c $(OBJECTS)
 	mkdir -p dist
-	$(CC) -o dist/server $^
+	$(CC) -o dist/server $^ -lpthread
 
 build/%.o: lib/%.c header/%.h
 	mkdir -p build

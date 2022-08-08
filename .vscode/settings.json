@@ -19,6 +19,7 @@
     "streambuf": "c",
     "routine.h": "c",
     "ucontext.h": "c",
-    "cerrno": "c"
+    "cerrno": "c",
+    "pthread.h": "c"
   }
 }
