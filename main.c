@@ -92,14 +92,6 @@ int main(int argc, char **agrv)
     check_failed(listen(server, 5), "listen failed");
     struct sockaddr_in clientaddr;
     int clientlen = sizeof(clientaddr);
-    char buffer[BUFSIZE],
-        method[BUFSIZE],
-        uri[BUFSIZE],
-        version[BUFSIZE],
-        key[BUFSIZE],
-        from[BUFSIZE],
-        count[BUFSIZE];
-
     while (1)
     {
         const int client = accept(server, (struct sockaddr *)&clientaddr, &clientlen);
