@@ -1,0 +1,24 @@
+{
+  "files.associations": {
+    "random": "c",
+    "utils.h": "c",
+    "stddef.h": "c",
+    "constants.h": "c",
+    "stdlib.h": "c",
+    "string.h": "c",
+    "check.h": "c",
+    "data.h": "c",
+    "inet.h": "c",
+    "argp.h": "c",
+    "*.tcc": "c",
+    "array": "c",
+    "numeric": "c",
+    "functional": "c",
+    "new": "c",
+    "stdexcept": "c",
+    "streambuf": "c",
+    "routine.h": "c",
+    "ucontext.h": "c",
+    "cerrno": "c"
+  }
+}
