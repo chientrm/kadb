@@ -36,6 +36,18 @@
     "socket.h": "c",
     "submission.h": "c",
     "uring.h": "c",
-    "ring.h": "c"
+    "ring.h": "c",
+    "stdio.h": "c",
+    "system_error": "c",
+    "fstream": "c",
+    "ostream": "c",
+    "internal.h": "c",
+    "private.h": "c",
+    "unistd.h": "c",
+    "ring.private.h": "c",
+    "data.private.h": "c",
+    "signal.h": "c",
+    "cstdlib": "c",
+    "cstdio": "c"
   }
 }

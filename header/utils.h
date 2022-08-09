@@ -1,9 +1,3 @@
-#ifndef UTILS_H
-#define UTILS_H
+#pragma once
 
-#include <stddef.h>
-#include <string.h>
-
-int starts_with(const char *pre, const char *str);
-
-#endif
+int string_starts_with(const char *pre, const char *str);

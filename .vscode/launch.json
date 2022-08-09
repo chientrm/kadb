@@ -1,10 +1,11 @@
 {
   "configurations": [
     {
-      "name": "server",
+      "name": "debugServer",
       "type": "cppdbg",
       "request": "launch",
-      "program": "${workspaceFolder}/dist/server",
+      "program": "${workspaceFolder}/dist/debug/server",
+      "preLaunchTask": "buildDebug",
       "setupCommands": [
         {
           "description": "Enable pretty-printing for gdb",

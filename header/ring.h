@@ -1,19 +1,16 @@
-#ifndef SUBMISSION_H
-#define SUBMISSION_H
+#pragma once
 
 #include <netinet/in.h>
 #include <liburing.h>
 
-#include "constants.h"
-
-struct io_uring ring;
+extern struct io_uring ring;
 
 #define EVENT_ACCEPT 0
 #define EVENT_READ 1
 #define EVENT_WRITE 2
 
-typedef struct io_uring_sqe RingSubmission;
 typedef struct io_uring_cqe RingCompletion;
+typedef struct io_uring_sqe RingSubmission;
 
 typedef struct
 {
@@ -22,8 +19,8 @@ typedef struct
     struct iovec iov;
 } Event;
 
-int ring_submit_accept(int socket, struct sockaddr_in *client, socklen_t *client_len);
+int ring_init(unsigned int entries, unsigned int flags);
+void ring_exit();
+int ring_submit_accept(int socket);
 int ring_submit_read(int socket);
 int ring_submit_write(Event *event);
-
-#endif

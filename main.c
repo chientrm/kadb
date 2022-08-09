@@ -1,6 +1,7 @@
 #include <signal.h>
+#include <stdlib.h>
 #include <string.h>
-#include <liburing.h>
+#include <stdio.h>
 
 #include "check.h"
 #include "constants.h"
@@ -10,36 +11,34 @@
 const char *result = "HTTP/1.0 200 OK\r\nContent-Type: text/plain\r\nContent-Length: 2\r\n\r\nOK\r\n";
 int result_len;
 
-void handle_request(Event *event)
+int handle_request(Event *event)
 {
-    Event *event_write = (Event *)malloc(sizeof(Event));
-    event_write->socket = event->socket;
     char *buffer = (char *)malloc(result_len);
     memcpy(buffer, result, result_len);
-    event->iov.iov_base = buffer;
-    event->iov.iov_len = result_len;
 
-    ring_submit_write(event_write);
+    Event *new_event = (Event *)malloc(sizeof(Event));
+    new_event->socket = event->socket;
+    new_event->iov.iov_base = buffer;
+    new_event->iov.iov_len = result_len;
+    return ring_submit_write(new_event);
 }
 
 void loop(const int socket)
 {
     RingCompletion *completion;
-    struct sockaddr_in client;
-    socklen_t socklen = sizeof(client);
 
-    ring_submit_accept(socket, &client, &socklen);
+    ring_submit_accept(socket);
 
     while (1)
     {
-        check_failed(io_uring_wait_cqe(&ring, &completion), "io_uring_wait_cqe");
-        check_failed(completion->res, "failed event");
+        check_negative(io_uring_wait_cqe(&ring, &completion), "ring_wait");
+        check_negative(completion->res, "event failed");
         Event *event = (Event *)completion->user_data;
 
         switch (event->type)
         {
         case EVENT_ACCEPT:
-            ring_submit_accept(socket, &client, &socklen);
+            ring_submit_accept(socket);
             ring_submit_read(completion->res);
             break;
         case EVENT_READ:
@@ -58,7 +57,7 @@ void loop(const int socket)
 void sigint(int signo)
 {
     printf(" pressed. Shutting down.\n");
-    io_uring_queue_exit(&ring);
+    ring_exit();
     exit(0);
 }
 
@@ -67,7 +66,7 @@ void main()
     signal(SIGINT, sigint);
     result_len = strlen(result);
     const int socket = socket_create(PORT);
-    check_failed(io_uring_queue_init(MAX_CONNS, &ring, 0), "init_ring failed");
+    check_negative(ring_init(MAX_CONNS, 0), "init_ring failed");
     printf("Listening on http://localhost:%d\n", PORT);
     loop(socket);
 }

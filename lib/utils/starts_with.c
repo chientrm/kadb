@@ -1,6 +1,8 @@
 #include "utils.h"
+#include <stddef.h>
+#include <string.h>
 
-int starts_with(const char *pre, const char *str)
+int string_starts_with(const char *pre, const char *str)
 {
     size_t lenpre = strlen(pre),
            lenstr = strlen(str);
