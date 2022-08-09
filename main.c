@@ -1,107 +1,73 @@
-#include <sys/socket.h>
-#include <netdb.h>
-#include <stdio.h>
-#include <arpa/inet.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <pthread.h>
 #include <signal.h>
+#include <string.h>
+#include <liburing.h>
 
-#include "data.h"
 #include "check.h"
-#include "utils.h"
 #include "constants.h"
+#include "socket.h"
+#include "ring.h"
 
-const char *result = "Hello World!";
-int resultlen;
+const char *result = "HTTP/1.0 200 OK\r\nContent-Type: text/plain\r\nContent-Length: 2\r\n\r\nOK\r\n";
+int result_len;
 
-typedef struct
+void handle_request(Event *event)
 {
-    int client;
-    pthread_t thread_id;
-} ThreadArgs;
+    Event *event_write = (Event *)malloc(sizeof(Event));
+    event_write->socket = event->socket;
+    char *buffer = (char *)malloc(result_len);
+    memcpy(buffer, result, result_len);
+    event->iov.iov_base = buffer;
+    event->iov.iov_len = result_len;
 
-void *handle_client(void *vargp)
-{
-    ThreadArgs *args = (ThreadArgs *)vargp;
-    const int client = args->client;
-    char buffer[BUFSIZE],
-        method[UL],
-        uri[UL],
-        version[UL],
-        key[BUFSIZE],
-        from[UL],
-        count[UL];
-    FILE *stream = fdopen(client, "r+");
-    if (stream == NULL)
-    {
-        close(client);
-        return NULL;
-    }
-
-    fgets(buffer, BUFSIZE, stream);
-    sscanf(buffer, "%s %s %s\n", method, uri, version);
-
-    fgets(buffer, BUFSIZE, stream);
-    unsigned long fromUl = 0,
-                  countUl = 0;
-    while (strcmp(buffer, "\r\n"))
-    {
-        fgets(buffer, BUFSIZE, stream);
-        if (starts_with("Data-Key: ", buffer) == 0)
-            sscanf(buffer, "Data-Key: %s\n", key);
-        else if (starts_with("Data-From: ", buffer) == 0)
-        {
-            sscanf(buffer, "Data-From: %s\n", from);
-            fromUl = strtoul(from, NULL, 10);
-        }
-        else if (starts_with("Data-Count: ", buffer) == 0)
-        {
-            sscanf(buffer, "Data-Count: %s\n", count);
-            countUl = strtoul(count, NULL, 10);
-        }
-    }
-    fprintf(stream, "HTTP/1.0 200 OK\n");
-    fprintf(stream, "Server: Svelty Data Server\n");
-    fprintf(stream, "Content-length: %d\n", resultlen);
-    fprintf(stream, "Content-type: text/plain\n");
-    fprintf(stream, "\r\n");
-    fflush(stream);
-    fprintf(stream, "%s", result);
-    fclose(stream);
-    close(client);
+    ring_submit_write(event_write);
 }
 
-int main(int argc, char **agrv)
+void loop(const int socket)
 {
-    signal(SIGPIPE, SIG_IGN);
-    resultlen = strlen(result);
-    const int server = socket(AF_INET, SOCK_STREAM, 0);
-    check_failed(server, "server failed");
-    const int optval = 1;
-    setsockopt(server, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(int));
-    struct sockaddr_in serveraddr = {
-        .sin_family = AF_INET,
-        .sin_port = htons(PORT),
-        .sin_addr = {.s_addr = htonl(INADDR_ANY)},
-    };
-    check_failed(
-        bind(server, (struct sockaddr *)&serveraddr, sizeof(serveraddr)),
-        "bind failed");
-    check_failed(listen(server, 5), "listen failed");
-    struct sockaddr_in clientaddr;
-    int clientlen = sizeof(clientaddr);
+    RingCompletion *completion;
+    struct sockaddr_in client;
+    socklen_t socklen = sizeof(client);
+
+    ring_submit_accept(socket, &client, &socklen);
+
     while (1)
     {
-        const int client = accept(server, (struct sockaddr *)&clientaddr, &clientlen);
-        if (client < 0)
-            continue;
-        pthread_t thread_id;
-        ThreadArgs *args = (ThreadArgs *)malloc(sizeof(ThreadArgs));
-        args->client = client;
-        pthread_create(&args->thread_id, NULL, handle_client, (void *)args);
+        check_failed(io_uring_wait_cqe(&ring, &completion), "io_uring_wait_cqe");
+        check_failed(completion->res, "failed event");
+        Event *event = (Event *)completion->user_data;
+
+        switch (event->type)
+        {
+        case EVENT_ACCEPT:
+            ring_submit_accept(socket, &client, &socklen);
+            ring_submit_read(completion->res);
+            break;
+        case EVENT_READ:
+            handle_request(event);
+            break;
+        case EVENT_WRITE:
+            free(event->iov.iov_base);
+            socket_close(event->socket);
+            break;
+        }
+        free(event);
+        io_uring_cqe_seen(&ring, completion);
     }
-    close(server);
-    return 0;
+}
+
+void sigint(int signo)
+{
+    printf(" pressed. Shutting down.\n");
+    io_uring_queue_exit(&ring);
+    exit(0);
+}
+
+void main()
+{
+    signal(SIGINT, sigint);
+    result_len = strlen(result);
+    const int socket = socket_create(PORT);
+    check_failed(io_uring_queue_init(MAX_CONNS, &ring, 0), "init_ring failed");
+    printf("Listening on http://localhost:%d\n", PORT);
+    loop(socket);
 }

@@ -20,6 +20,22 @@
     "routine.h": "c",
     "ucontext.h": "c",
     "cerrno": "c",
-    "pthread.h": "c"
+    "pthread.h": "c",
+    "liburing.h": "c",
+    "stat.h": "c",
+    "bit": "c",
+    "exception": "c",
+    "algorithm": "c",
+    "iterator": "c",
+    "memory": "c",
+    "limits": "c",
+    "tuple": "c",
+    "type_traits": "c",
+    "istream": "c",
+    "in.h": "c",
+    "socket.h": "c",
+    "submission.h": "c",
+    "uring.h": "c",
+    "ring.h": "c"
   }
 }
