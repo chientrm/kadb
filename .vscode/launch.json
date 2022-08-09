@@ -4,7 +4,7 @@
       "name": "debugServer",
       "type": "cppdbg",
       "request": "launch",
-      "program": "${workspaceFolder}/dist/debug/server",
+      "program": "${workspaceFolder}/dist/debug/kadb",
       "preLaunchTask": "buildDebug",
       "setupCommands": [
         {

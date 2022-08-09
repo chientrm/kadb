@@ -16,11 +16,11 @@ int handle_request(Event *event)
     char *buffer = (char *)malloc(result_len);
     memcpy(buffer, result, result_len);
 
-    Event *new_event = (Event *)malloc(sizeof(Event));
-    new_event->socket = event->socket;
-    new_event->iov.iov_base = buffer;
-    new_event->iov.iov_len = result_len;
-    return ring_submit_write(new_event);
+    Event *write_event = (Event *)malloc(sizeof(Event));
+    write_event->socket = event->socket;
+    write_event->iov.iov_base = buffer;
+    write_event->iov.iov_len = result_len;
+    return ring_submit_write(write_event);
 }
 
 void loop(const int socket)
