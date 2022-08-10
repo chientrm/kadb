@@ -2,71 +2,94 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <sys/uio.h>
 
-#include "check.h"
-#include "constants.h"
 #include "socket.h"
+#include "constants.h"
 #include "ring.h"
+#include "data.h"
 
-const char *result = "HTTP/1.0 200 OK\r\nContent-Type: text/plain\r\nContent-Length: 2\r\n\r\nOK\r\n";
-int result_len;
-
-int handle_request(Event *event)
+int handle_invalid(int socket)
 {
-    char *buffer = (char *)malloc(result_len);
-    memcpy(buffer, result, result_len);
-
-    Event *write_event = (Event *)malloc(sizeof(Event));
-    write_event->socket = event->socket;
-    write_event->iov.iov_base = buffer;
-    write_event->iov.iov_len = result_len;
-    return ring_submit_write(write_event);
+    const char *INVALID = "HTTP/1.0 400 Bad Request\r\n\r\n";
+    const unsigned long INVALID_LEN = sizeof(INVALID);
+    EventData data = {
+        .iov[0] = {
+            .iov_len = INVALID_LEN,
+            .iov_base = (char *)malloc(INVALID_LEN)},
+        .iov_count = 1,
+        .socket = socket};
+    memcpy(data.iov[0].iov_base, INVALID, INVALID_LEN);
+    return ring_response(data);
 }
 
-void loop(const int socket)
+int handle_empty(int socket)
 {
-    RingCompletion *completion;
+    const char *EMPTY = "HTTP/1.0 200 OK\r\nContent-Type: text/plain\r\nContent-Length: 0\r\n\r\n";
+    const unsigned long EMPTY_LEN = sizeof(EMPTY);
+    EventData data = {
+        .iov[0] = {
+            .iov_len = EMPTY_LEN,
+            .iov_base = (char *)malloc(EMPTY_LEN)},
+        .iov_count = 1,
+        .socket = socket};
+    memcpy(data.iov[0].iov_base, EMPTY, EMPTY_LEN);
+    return ring_response(data);
+}
 
-    ring_submit_accept(socket);
+int handle_result(int socket, DataGetResult result)
+{
+    const char *SUCCESS_FORMAT = "HTTP/1.0 200 OK\r\nContent-Type: text/plain\r\nContent-Length: %lu\r\nKadb-Count: %lu\r\n";
+    EventData data = {
+        .socket = socket,
+        .iov_count = 3,
+        .iov[0] = {
+            .iov_len = BUFFER_SIZE,
+            .iov_base = (char *)malloc(BUFFER_SIZE)},
+        .iov[1] = result.acc,
+        .iov[2] = result.data};
+    sprintf(data.iov[0].iov_base,
+            SUCCESS_FORMAT,
+            result.acc.iov_len + result.data.iov_len,
+            result.count);
+    return ring_response(data);
+}
 
-    while (1)
+int handle_request(EventData data)
+{
+    char method[BUFFER_SIZE], uri[BUFFER_SIZE], version[BUFFER_SIZE];
+    sscanf(data.iov[0].iov_base, "%s %s %s", method, uri, version);
+    char *key, *from, *count, *value;
+    if (strcmp(method, "GET") == 0 &&
+        (key = strtok(uri, "/")) &&
+        (from = strtok(NULL, "/")) &&
+        (count = strtok(NULL, "/")))
     {
-        check_negative(io_uring_wait_cqe(&ring, &completion), "ring_wait");
-        check_negative(completion->res, "event failed");
-        Event *event = (Event *)completion->user_data;
-
-        switch (event->type)
-        {
-        case EVENT_ACCEPT:
-            ring_submit_accept(socket);
-            ring_submit_read(completion->res);
-            break;
-        case EVENT_READ:
-            handle_request(event);
-            break;
-        case EVENT_WRITE:
-            free(event->iov.iov_base);
-            socket_close(event->socket);
-            break;
-        }
-        free(event);
-        io_uring_cqe_seen(&ring, completion);
+        const unsigned long from_ul = strtoul(from, NULL, 10);
+        const unsigned long count_ul = strtoul(count, NULL, 10);
+        DataGetResult result = data_get(key, from_ul, count_ul);
+        return handle_result(data.socket, result);
     }
+    if (strcmp(method, "POST") == 0 &&
+        (key = strtok(uri, "/")) &&
+        (value = strtok(NULL, "/")))
+    {
+        data_post(key, value);
+        return handle_empty(data.socket);
+    }
+    return handle_invalid(data.socket);
 }
 
 void sigint(int signo)
 {
-    printf(" pressed. Shutting down.\n");
-    ring_exit();
+    ring_stop();
     exit(0);
 }
 
 void main()
 {
     signal(SIGINT, sigint);
-    result_len = strlen(result);
-    const int socket = socket_create(PORT);
-    check_negative(ring_init(MAX_CONNS, 0), "init_ring failed");
+    const int socket = socket_create(PORT, MAX_CONNS);
     printf("Listening on http://localhost:%d\n", PORT);
-    loop(socket);
+    ring_listen(socket, MAX_CONNS, handle_request);
 }

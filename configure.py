@@ -1,6 +1,8 @@
 from glob import glob
 from dataclasses import dataclass, field
 
+CC = 'gcc -Iheader -Werror'
+
 
 @dataclass
 class Rule:
@@ -29,7 +31,7 @@ def generate_makefile():
         Rule('dist/release/kadb', ['main.c'] + archives,
              [
             'mkdir -p dist/release',
-            'gcc -Werror -Iheader -o $@ $^ -luring'
+            f'{CC} -o $@ $^ -luring'
         ]),
     ]
     for lib in libs:
@@ -46,7 +48,7 @@ def generate_makefile():
                 [f'header/{lib}.h', source],
                 [
                     f'mkdir -p build/release/{lib}',
-                    f'gcc -c -Werror -Iheader -o $@ {source}'
+                    f'{CC} -c -o $@ {source}'
                 ])
             rules.append(rule)
         for source in private_sources:
@@ -59,7 +61,7 @@ def generate_makefile():
                 ],
                 [
                     f'mkdir -p build/release/{lib}/private',
-                    f'gcc -c -Werror -Iheader -o $@ {source}'
+                    f'{CC} -c -o $@ {source}'
                 ])
             rules.append(rule)
     makefile = '\n'.join([str(rule) for rule in rules])

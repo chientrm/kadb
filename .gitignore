@@ -3,3 +3,5 @@ dist
 Makefile
 Makefile.*
 core.*
+.pytest_cache
+__pycache__

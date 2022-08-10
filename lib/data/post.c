@@ -68,7 +68,7 @@ Node *insert(Node *node, const char *key, const char *value)
     return node;
 }
 
-void data_insert(const char *key, const char *value)
+void data_post(const char *key, const char *value)
 {
     root = insert(root, key, value);
 }

@@ -4,8 +4,14 @@
 #include <stdlib.h>
 #include <string.h>
 
-char *data_get(const char *key, unsigned long from, unsigned long count)
+#define MIN(a, b) ((a) < (b) ? (a) : (b))
+
+DataGetResult data_get(const char *key, unsigned long from, unsigned long count)
 {
+    DataGetResult result = {
+        .count = 0,
+        .acc = {.iov_base = NULL, .iov_len = 0},
+        .data = {.iov_base = NULL, .iov_len = 0}};
     Node *node = root;
     while (node != NULL)
     {
@@ -23,18 +29,20 @@ char *data_get(const char *key, unsigned long from, unsigned long count)
             node = node->right;
         }
     }
-    if (node == NULL)
+    if (node)
     {
-        return NULL;
+        const unsigned long nItems = node->value.nItems;
+        from = MIN(from, nItems - 1);
+        const unsigned long to = MIN(from + count, nItems);
+        result.count = to - from;
+        result.acc.iov_len = result.count * sizeof(unsigned long);
+        result.acc.iov_base = (char *)malloc(result.acc.iov_len);
+        memcpy(result.acc.iov_base, node->value.accLengths + from, result.acc.iov_len);
+        result.data.iov_len = node->value.accLengths[to - 1] - node->value.accLengths[from];
+        const unsigned long offset = from > 0 ? node->value.accLengths[from - 1] : 0;
+        result.data.iov_base = (char *)malloc(result.data.iov_len);
+        memcpy(result.data.iov_base, node->value.data + offset, result.data.iov_len);
     }
-    const unsigned long index = node->value.accLengths[node->value.nItems - 1] - node->value.accLengths[node->value.nItems - 2];
-    if (from >= index)
-    {
-        return NULL;
-    }
-    if (from + count > index)
-    {
-        count = index - from;
-    }
-    return node->value.data + from;
+
+    return result;
 }
