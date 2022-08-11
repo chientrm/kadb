@@ -18,11 +18,11 @@ int handle_invalid(int socket)
     char *INVALID = "HTTP/1.0 400 Bad Request\r\n\r\n";
     const unsigned long INVALID_LEN = strlen(INVALID);
     EventData data = {
+        .socket = socket,
+        .iov_count = 1,
         .iov[0] = {
             .iov_len = INVALID_LEN,
-            .iov_base = INVALID},
-        .iov_count = 1,
-        .socket = socket};
+            .iov_base = INVALID}};
     return ring_write(data);
 }
 
