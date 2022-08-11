@@ -1,6 +1,6 @@
 # kadb
 
-Ultra fast Immutable Key-Array Database.
+Lightning fast Immutable Key-Array Database.
 
 # Common use cases
 
