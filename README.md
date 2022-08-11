@@ -2,19 +2,26 @@
 
 Ultra fast Immutable Key-Array Database.
 
-# Features
+# Common use cases
+
+- Logging server
+- Uneditable chat room/forum
+
+# Why `kadb`?
 
 - Post new value: O(logn)
 - Read subarray: O(logn)
 
 _n is the total number of key_
 
-## Algorithms used
+## Implementation
 
-- io_uring
+- Linux's io_uring
 - AVL Tree
 - Array offsets
-- Dynamic memory allocation where `new memsize = old memsize * 2 + 1`
+- realloc strategy `new memsize = old memsize * 2`
+- HTTP request max size = 1024 bytes
+- Unlimited response `application/octet-stream`
 
 ## Build
 
@@ -46,3 +53,19 @@ make
 ```bash
 dist/release/kadb
 ```
+
+## Test correctness
+
+Run test while server is running
+
+```bash
+pytest
+```
+
+## Debug
+
+```bash
+make -f Makefile.debug
+```
+
+## Benchmarks
