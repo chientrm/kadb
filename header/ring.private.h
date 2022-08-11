@@ -13,6 +13,23 @@ typedef struct
     EventData data;
 } Event;
 
+typedef struct
+{
+    Event event;
+    int socket;
+} EventAccept;
+
+typedef struct
+{
+    Event event;
+    EventData data;
+} EventRead;
+
+typedef struct
+{
+    Event event;
+} EventWrite;
+
 extern struct io_uring ring;
 
 int submit_accept(int socket);

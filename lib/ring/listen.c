@@ -24,12 +24,12 @@ void ring_listen(int socket, int max_conns, int (*request_handler)(EventData))
             {
                 request_handler(event->data);
             }
-            break;
-        case EVENT_WRITE:
             for (int i = 0; i < event->data.iov_count; i++)
             {
                 free(event->data.iov[i].iov_base);
             }
+            break;
+        case EVENT_WRITE:
             close(event->data.socket);
             break;
         }

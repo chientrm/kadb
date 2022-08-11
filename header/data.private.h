@@ -1,6 +1,16 @@
 #pragma once
+#include "CONSTANTS.H"
 
-#include "constants.h"
+#include <stddef.h>
+
+typedef struct
+{
+    unsigned long maxCount;
+    unsigned long count;
+    unsigned long data_size;
+    unsigned long *accs;
+    char *data;
+} Value;
 
 typedef struct node
 {
@@ -8,20 +18,15 @@ typedef struct node
     struct node *left;
     struct node *right;
     unsigned long height;
-    struct
-    {
-        unsigned long maxItems;
-        unsigned long nItems;
-        unsigned long *accLengths;
-        unsigned long maxLength;
-        char *data;
-    } value;
+    Value value;
 } Node;
 
 extern Node *root;
 
 unsigned long height(Node *node);
+void increase_size_lu(unsigned long *size, unsigned long **ptr);
+void increase_size_char(unsigned long *size, char **ptr);
 int get_balance(Node *node);
-Node *new_node(const char *key, const char *value);
+Node *new_node(const char *key, const char *item);
 Node *right_rotate(Node *y);
 Node *left_rotate(Node *x);

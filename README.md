@@ -1,6 +1,13 @@
 # kadb
 
-Ultra fast Immutable Key-Array Database
+Ultra fast Immutable Key-Array Database.
+
+# Features
+
+- Post new value: O(logn)
+- Read subarray: O(logn)
+
+_n is the total number of key_
 
 ## Algorithms used
 

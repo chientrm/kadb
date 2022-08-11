@@ -82,6 +82,7 @@
     "typeinfo": "c",
     "error.h": "c",
     "errno.h": "c",
-    "features.h": "c"
+    "features.h": "c",
+    "CONSTANTS.H": "cpp"
   }
 }

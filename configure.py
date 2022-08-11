@@ -69,7 +69,7 @@ def generate_makefile():
         f.write(makefile)
     with open('Makefile.debug', 'w') as f:
         f.write(makefile
-                .replace('-o $@', '-o $@ -g')
+                .replace('-o $@', '-o $@ -g -O0')
                 .replace('/release', '/debug'))
 
 

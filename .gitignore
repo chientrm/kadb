@@ -5,3 +5,4 @@ Makefile.*
 core.*
 .pytest_cache
 __pycache__
+tmp.bin

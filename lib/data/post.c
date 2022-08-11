@@ -6,46 +6,42 @@
 
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 
-Node *insert(Node *node, const char *key, const char *value)
+Node *insert(Node *node, const char *key, const char *item)
 {
     if (node == NULL)
     {
-        return new_node(key, value);
+        return new_node(key, item);
     }
     const int cmp = strcmp(key, node->key);
     if (cmp == 0)
     {
-        while (node->value.nItems == node->value.maxItems)
+        Value *value = &node->value;
+        value->count++;
+        while (value->count > value->maxCount)
         {
-            const int newMaxCount = node->value.maxItems * 2 + 1;
-            node->value.maxItems = newMaxCount;
-            node->value.accLengths = (unsigned long *)realloc(node->value.accLengths, newMaxCount * sizeof(unsigned long));
+            increase_size_lu(&value->maxCount, &value->accs);
         }
-        node->value.nItems++;
-        unsigned long accLength = strlen(value);
-        if (node->value.nItems > 1)
+        const unsigned long len = strlen(item);
+        const unsigned long previous_acc = value->count > 1 ? value->accs[value->count - 2] : 0;
+        const unsigned long acc = previous_acc + len;
+        while (acc > value->data_size)
         {
-            accLength += node->value.accLengths[node->value.nItems - 2];
+            increase_size_char(&value->data_size, &value->data);
         }
-        node->value.accLengths[node->value.nItems - 1] = accLength;
-        while (accLength > node->value.maxLength)
-        {
-            const int newAccLength = accLength * 2 + 1;
-            node->value.data = (char *)realloc(node->value.data, newAccLength);
-            node->value.maxLength = newAccLength;
-        }
-        memcpy(node->value.data + accLength, value, strlen(value));
-        return node;
+        value->accs[value->count - 1] = acc;
+        memcpy(value->data + previous_acc, item, len);
     }
-    if (cmp < 0)
+    else if (cmp < 0)
     {
-        node->left = insert(node->left, key, value);
+        node->left = insert(node->left, key, item);
     }
     else
     {
-        node->right = insert(node->right, key, value);
+        node->right = insert(node->right, key, item);
     }
-    node->height = 1 + MAX(node->left->height, node->right->height);
+
+    node->height = 1 + MAX(height(node->left), height(node->right));
+
     const int balance = get_balance(node);
     if (balance > 1 && cmp < 0)
     {
@@ -65,6 +61,7 @@ Node *insert(Node *node, const char *key, const char *value)
         node->right = right_rotate(node->right);
         return left_rotate(node);
     }
+
     return node;
 }
 

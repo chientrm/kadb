@@ -3,20 +3,20 @@
 #include <stdlib.h>
 #include <string.h>
 
-Node *new_node(const char *key, const char *value)
+Node *new_node(const char *key, const char *item)
 {
-    Node *node = (Node *)malloc(sizeof(Node));
-    strcpy(node->key, key);
-    node->left = NULL;
-    node->right = NULL;
-    node->height = 0;
-    node->value.maxItems = 1;
-    node->value.nItems = 1;
-    const size_t length = strlen(value);
-    node->value.maxLength = length;
-    node->value.accLengths = (unsigned long *)malloc(sizeof(unsigned long));
-    node->value.accLengths[0] = length;
-    node->value.data = (char *)malloc(length);
-    strcpy(node->value.data, value);
-    return node;
+    const unsigned long key_len = strlen(key);
+    const unsigned long item_len = strlen(item);
+    Node *result = (Node *)malloc(sizeof(Node));
+    result->left = NULL;
+    result->right = NULL;
+    result->height = 0;
+    result->value.maxCount = 1;
+    result->value.count = 1;
+    result->value.data_size = item_len;
+    result->value.accs = malloc(sizeof(unsigned long));
+    result->value.accs[0] = item_len;
+    result->value.data = (char *)malloc(item_len);
+    memcpy(result->value.data, item, item_len);
+    return result;
 }

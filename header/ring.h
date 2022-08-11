@@ -11,4 +11,4 @@ typedef struct
 
 void ring_listen(int socket, int max_conns, int (*request_handler)(EventData));
 void ring_stop();
-int ring_response(EventData data);
+int ring_write(EventData data);
