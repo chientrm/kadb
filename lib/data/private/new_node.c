@@ -8,8 +8,7 @@ Node *new_node(const char *key, const char *item)
     const unsigned long key_len = strlen(key);
     const unsigned long item_len = strlen(item);
     Node *result = (Node *)malloc(sizeof(Node));
-    result->key = (char *)calloc(1, key_len + 1);
-    memcpy(result->key, key, key_len);
+    result->key = strdup(key);
     result->left = NULL;
     result->right = NULL;
     result->height = 0;
@@ -18,7 +17,6 @@ Node *new_node(const char *key, const char *item)
     result->value.data_size = item_len;
     result->value.accs = malloc(sizeof(unsigned long));
     result->value.accs[0] = item_len;
-    result->value.data = (char *)malloc(item_len);
-    memcpy(result->value.data, item, item_len);
+    result->value.data = strdup(item);
     return result;
 }

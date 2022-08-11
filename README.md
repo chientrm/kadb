@@ -18,10 +18,10 @@ _n is the total number of key_
 
 - Linux's io_uring
 - AVL Tree
-- Array offsets
+- Array accumulated items length
 - realloc strategy `new memsize = old memsize * 2`
 - HTTP request max size = 1024 bytes
-- Unlimited response `application/octet-stream`
+- Unlimited key length, value length, http response `content-length`
 
 ## Build
 
@@ -40,8 +40,10 @@ git clone https://github.com/chientrm/kadb
 
 ```bash
 cd liburing
+./configure
 make
 sudo make install
+cd ..
 ```
 
 ### Configure
@@ -62,15 +64,18 @@ make
 dist/release/kadb
 ```
 
+Output: `Listening on http://localhost:8080`
+
 ## Test correctness
 
 Run test while server is running
 
 ```bash
+pip install -g pytest
 pytest
 ```
 
-## Debug
+## Build debug
 
 ```bash
 make -f Makefile.debug
