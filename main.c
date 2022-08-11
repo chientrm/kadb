@@ -24,7 +24,7 @@ int handle_invalid(int socket)
 
 int handle_empty(int socket)
 {
-    const char *EMPTY = "HTTP/1.0 204 OK\r\n\r\n";
+    char *EMPTY = "HTTP/1.0 204 OK\r\n\r\n";
     const unsigned long EMPTY_LEN = strlen(EMPTY);
     EventData data = {
         .socket = socket,
@@ -57,7 +57,7 @@ int handle_result(int socket, DataGetResult result)
 int handle_request(EventData data)
 {
     const char *method = strtok(data.iov[0].iov_base, " ");
-    const char *uri = strtok(NULL, " ");
+    char *uri = strtok(NULL, " ");
     char *key, *from, *count, *value;
     if (strcmp(method, "GET") == 0 &&
         (key = strtok(uri, "/")) &&
