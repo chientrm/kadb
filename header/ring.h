@@ -2,13 +2,8 @@
 
 #include <sys/uio.h>
 
-typedef struct
-{
-    int socket;
-    char iov_count;
-    struct iovec iov[3];
-} EventData;
-
-void ring_listen(int socket, int max_conns, int (*request_handler)(EventData));
+void ring_listen(int socket, int max_conns, int (*request_handler)(int, struct iovec));
 void ring_stop();
-int ring_write(EventData data);
+int ring_write_invalid(int socket);
+int ring_write_empty(int socket);
+int ring_write_data(int socket, unsigned long count, struct iovec acc, struct iovec data);

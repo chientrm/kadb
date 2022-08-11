@@ -28,11 +28,12 @@ def generate_makefile():
     rules = [
         Rule('all', ['dist/release/kadb']),
         Rule('clean', commands=['rm -rf build dist']),
-        Rule('dist/release/kadb', ['main.c'] + archives,
+        Rule('dist/release/kadb',
+             ['main.c'] + archives,
              [
-            'mkdir -p dist/release',
-            f'{CC} -o $@ $^ -luring'
-        ]),
+                 'mkdir -p dist/release',
+                 f'{CC} -o $@ $^ -luring'
+             ]),
     ]
     for lib in libs:
         public_sources = glob(f'lib/{lib}/*.c')
@@ -45,7 +46,11 @@ def generate_makefile():
         for source in public_sources:
             rule = Rule(
                 get_object(source),
-                [f'header/{lib}.h', f'header/{lib}.private.h', source],
+                [
+                    f'header/{lib}.h',
+                    f'header/{lib}.private.h',
+                    source
+                ],
                 [
                     f'mkdir -p build/release/{lib}',
                     f'{CC} -c -o $@ {source}'
