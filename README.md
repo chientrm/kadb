@@ -30,19 +30,27 @@ _n is the total number of key_
 - Python 3
 - Build essential
 
-Clone project
+### Clone project
 
 ```bash
 git clone https://github.com/chientrm/kadb
 ```
 
-Configure
+### Build and install liburing
+
+```bash
+cd liburing
+make
+sudo make install
+```
+
+### Configure
 
 ```bash
 python configure.py
 ```
 
-Build release
+### Build release
 
 ```bash
 make
