@@ -8,6 +8,8 @@ Node *new_node(const char *key, const char *item)
     const unsigned long key_len = strlen(key);
     const unsigned long item_len = strlen(item);
     Node *result = (Node *)malloc(sizeof(Node));
+    result->key = (char *)calloc(1, key_len + 1);
+    memcpy(result->key, key, key_len);
     result->left = NULL;
     result->right = NULL;
     result->height = 0;

@@ -9,6 +9,10 @@
 #include "ring.h"
 #include "data.h"
 
+#define PORT 8080
+#define MAX_CONNS 1024
+#define MAX_QUEUE MAX_CONNS * 5
+
 int handle_invalid(int socket)
 {
     char *INVALID = "HTTP/1.0 400 Bad Request\r\n\r\n";
@@ -90,5 +94,5 @@ void main()
     signal(SIGINT, sigint);
     const int socket = socket_create(PORT, MAX_CONNS);
     printf("Listening on http://localhost:%d\n", PORT);
-    ring_listen(socket, MAX_CONNS, handle_request);
+    ring_listen(socket, MAX_QUEUE, handle_request);
 }

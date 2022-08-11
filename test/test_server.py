@@ -1,40 +1,44 @@
 from random import random
 import requests
 import random
-import base64
-import math
 
-MAX_ENCODED_KEY_LENGTH = 16
-MAX_KEY_LENGTH = math.floor(MAX_ENCODED_KEY_LENGTH * 5 / 8)
-MAX_ENCODED_VALUED_LENGTH = 1024 - len("POST /0123456789ABCDEF/ HTTP/1.1") - 1
-MAX_VALUE_LENGTH = math.floor(MAX_ENCODED_VALUED_LENGTH * 5 / 8) * 10
+MAX_KEY_LENGTH = 16
+MAX_VALUE_LENGTH = 990
+
+CHARSETS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
 
-def random_key(len):
-    raw_key = bytes(random.getrandbits(8) for _ in range(len))
-    return base64.b32encode(raw_key).decode('ascii')
-
-
-def random_value(len):
-    raw_value = bytes(random.getrandbits(8) for _ in range(len))
-    return base64.b32encode(raw_value).decode('ascii')
+def randst(len):
+    return ''.join(random.choice(CHARSETS) for _ in range(len))
 
 
 def parse_response(count, content):
-    result = []
+    accs = []
+    items = []
     for i in range(int(count)):
-        result.append(int.from_bytes(content[i*8:(i+1)*8], byteorder='little'))
-    return result
+        accs.append(int.from_bytes(content[i*8:(i+1)*8], byteorder='little'))
+    content = content[int(count)*8:]
+    for i in range(int(count)):
+        start = accs[i] - accs[0]
+        end = accs[i+1] - accs[0] if i+1 < int(count) else len(content)
+        items.append(content[start:end].decode('ascii'))
+    return items
 
 
-def test_write():
-    key = random_key(MAX_KEY_LENGTH)
-    value = random_value(MAX_VALUE_LENGTH)
-    print([key, value])
-    response = requests.post(f'http://localhost:8080/{key}/{value}')
-    assert response.status_code == 204
-    response = requests.get(f'http://localhost:8080/{key}/0/10')
-    assert response.status_code == 200
-    count = response.headers['Kadb-count']
-    result = parse_response(count, response.content)
-    print(result)
+def test_correctness():
+    n_keys = 100
+    n_items = 100
+    keys = [randst(MAX_KEY_LENGTH) for _ in range(n_keys)]
+    values = [[randst(MAX_VALUE_LENGTH) for _ in range(n_items)]
+              for _ in range(n_keys)]
+    for i in range(n_items):
+        for j in range(n_keys):
+            response = requests.post(
+                f'http://localhost:8080/{keys[j]}/{values[j][i]}')
+            assert response.status_code == 204
+    for j in range(n_keys):
+        response = requests.get(f'http://localhost:8080/{keys[j]}/0/{n_items}')
+        assert response.status_code == 200
+        count = response.headers['Kadb-count']
+        items = parse_response(count, response.content)
+        assert all(item == values[j][i] for i, item in enumerate(items))

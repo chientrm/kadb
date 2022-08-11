@@ -1,7 +1,4 @@
 #pragma once
-#include "CONSTANTS.H"
-
-#include <stddef.h>
 
 typedef struct
 {
@@ -14,7 +11,7 @@ typedef struct
 
 typedef struct node
 {
-    char key[KEY_SIZE];
+    char *key;
     struct node *left;
     struct node *right;
     unsigned long height;

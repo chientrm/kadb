@@ -45,7 +45,7 @@ def generate_makefile():
         for source in public_sources:
             rule = Rule(
                 get_object(source),
-                [f'header/{lib}.h', source],
+                [f'header/{lib}.h', f'header/{lib}.private.h', source],
                 [
                     f'mkdir -p build/release/{lib}',
                     f'{CC} -c -o $@ {source}'
