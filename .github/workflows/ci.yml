@@ -17,3 +17,5 @@ jobs:
           version: 1.0
       - run: python configure.py
       - run: make
+      - run: dist/release/kadb &
+      - run: pytest
