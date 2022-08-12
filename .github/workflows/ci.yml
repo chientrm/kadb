@@ -19,7 +19,7 @@ jobs:
           submodules: recursive
       - run: ./configure
       - run: make
-      - run: make install
+      - run: sudo make install
 
   test:
     runs-on: ubuntu-latest
