@@ -17,8 +17,8 @@ jobs:
         env:
           cache-name: cache-liburing
         with:
-          path: ./liburing
-          key: ${{ hashFiles('liburing') }}
+          path: liburing
+          key: ${{ hashFiles('liburing') }}-clear
       - run: |
           cd liburing
           ./configure
@@ -26,4 +26,3 @@ jobs:
           sudo make install
       - run: python configure.py
       - run: make
-      - run: echo "test cache"
