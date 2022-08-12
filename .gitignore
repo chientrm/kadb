@@ -7,3 +7,5 @@ core.*
 __pycache__
 tmp.bin
 .vscode/settings.json
+*.txt
+*.pcap
