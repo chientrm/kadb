@@ -18,4 +18,5 @@ jobs:
       - run: python configure.py
       - run: make
       - run: dist/release/kadb &
-      - run: python -m pytest
+      - run: pip install -g pytest
+      - run: pytest
