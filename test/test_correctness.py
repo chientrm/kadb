@@ -51,5 +51,5 @@ def read_and_assert():
 
 
 def test_correctness():
-    # write()
+    write()
     read_and_assert()
