@@ -11,12 +11,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-        with:
-          submodules: recursive
-      - run: |
-          cd liburing
-          ./configure
-          make
-          sudo make install
+        # with:
+        #   submodules: recursive
+      - run: sudo apt install liburing-dev
+      # - uses: actions/cache@v3
+      #   env:
+      #     cache-name: cache-liburing
+      #   with:
+      #     path: ./liburing
+      #     key: ${{ hashFiles('liburing') }}
+      # - run: |
+      #     cd liburing
+      #     ./configure
+      #     make
+      #     sudo make install
       - run: python configure.py
       - run: make
