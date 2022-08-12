@@ -11,9 +11,11 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v2
-      - run: |
-          sudo apt-get update
-          sudo apt-get install -y liburing-dev
+      - run: sudo apt-get update
+      - uses: awalsh128/cache-apt-pkgs-action@latest
+        with:
+          packages: liburing-dev
+          version: 1.0
       - run: python configure.py
       - run: make
       - run: echo "TEST_SUCCESS"
