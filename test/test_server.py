@@ -13,8 +13,8 @@ def randst(len):
     return ''.join(random.choice(CHARSETS) for _ in range(len))
 
 
-n_keys = 100
-n_items = 100
+n_keys = 10
+n_items = 10
 keys = [randst(MAX_KEY_LENGTH) for _ in range(n_keys)]
 values = [[randst(MAX_VALUE_LENGTH) for _ in range(n_items)]
           for _ in range(n_keys)]
