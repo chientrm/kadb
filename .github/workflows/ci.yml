@@ -8,25 +8,12 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-        # with:
-        #   submodules: recursive
       - run: |
           sudo apt-get update
-          sudo apt-get install liburing-dev
-      # - uses: actions/cache@v3
-      #   env:
-      #     cache-name: cache-liburing
-      #   with:
-      #     path: liburing
-      #     key: ${{ hashFiles('liburing') }}-clear
-      # - run: |
-      #     cd liburing
-      #     ./configure
-      #     make
-      #     sudo make install
+          sudo apt-get install -y liburing-dev
       - run: python configure.py
       - run: make
       - run: echo "TEST_SUCCESS"
