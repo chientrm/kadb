@@ -1,5 +1,5 @@
 import random
-random.seed(10)
+random.seed(2020)
 
 MAX_KEY_LENGTH = 16
 MAX_VALUE_LENGTH = 990

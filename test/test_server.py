@@ -1,7 +1,7 @@
 from random import random
 import requests
 import random
-random.seed(10)
+random.seed(1010)
 
 MAX_KEY_LENGTH = 16
 MAX_VALUE_LENGTH = 990
