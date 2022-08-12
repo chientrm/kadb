@@ -26,3 +26,4 @@ jobs:
           sudo make install
       - run: python configure.py
       - run: make
+      - run: echo "TEST_SUCCESS"
