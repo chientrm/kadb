@@ -35,14 +35,14 @@ void ring_listen(int socket, int max_conns, int (*request_handler)(int, struct i
         case EVENT_WRITE_NO_DATA:
         {
             EventWriteNoData *write_no_data = (EventWriteNoData *)event;
-            close(write_no_data->socket);
+            shutdown(write_no_data->socket, SHUT_RDWR);
             break;
         }
         case EVENT_WRITE_DATA:
         {
             EventWriteData *write_data = (EventWriteData *)event;
             free(write_data->header.iov_base);
-            close(write_data->socket);
+            shutdown(write_data->socket, SHUT_RDWR);
             break;
         }
         }
