@@ -20,7 +20,6 @@ _n is the total number of key_
 - Linux's io_uring
 - AVL Tree
 - Array accumulated items length
-- realloc strategy `new memsize = old memsize * 2`
 - Single-threaded
 
 ## Build
@@ -75,11 +74,11 @@ pip install pytest
 python -m pytest
 ```
 
-## Try with `curl`
+# How to use?
 
-### Put value
+## Put value
 
-URI format: `/put/<metadata_length>/<key_length>/<value_length>/<key><1 delim byte><value>`
+URI format: `/put/<metadata_length>/<key_length>/<value_length>/<key><value>`
 
 #### Example
 
@@ -87,13 +86,13 @@ URI format: `/put/<metadata_length>/<key_length>/<value_length>/<key><1 delim by
 2. `value_length = 2^64 = 18446744073709600000`
 3. `metadata_length = strlen(key_length) + strlen(value_length) = 10 + 20 = 30`
 
-Command: `curl http://localhost:8080/put/030/4294967296/18446744073709600000/<key><1 delim byte><value>`
+Command: `curl http://localhost:8080/put/030/4294967296/18446744073709600000/<key><value>`
 
 Result: `Code 204`
 
-_After read by the server, `<1 delim byte>` is replaced by NULL to separate key and value without allocate new memory_
+_`metadata_length` is always 3 bytes filled with leading `0`_
 
-### Get values
+## Get values
 
 URI format: `/get/<metadata_length>/<key_length>/<from>/<count>/<key>`
 
@@ -104,15 +103,16 @@ URI format: `/get/<metadata_length>/<key_length>/<from>/<count>/<key>`
 3. `count = 2^64 = 18446744073709600000`
 4. `metadata_length = strlen(key_length) + strlen(from) + strlen(count) = 10 + 10 + 20 = 40`
 
-Command: `curl http://localhost:8080/get/040/4294967296/4294967296/18446744073709600000/key -o result.bin`
+Command: `curl http://localhost:8080/get/040/4294967296/4294967296/18446744073709600000/<key> -o result.bin`
 
 The result header contains
 
 ```
-Kadb-count: 2
+Kadb-count: 10
+Kadb-found: 2
 ```
 
-meaning 2 values returned.
+meaning the key has total 10 values and 2 values is found in range `[from:from+count]`.
 
 `result.bin`:
 
@@ -121,37 +121,14 @@ meaning 2 values returned.
 - Next 2 bytes: first value
 - Next 6 bytes: second value
 
-### Count number of values of a key
-
-URI format: `/cnt/<metadata_length>/<key_length>/<key>`
-
-Example
-
-1. `key_length = 2^32 = 4294967296`
-2. `metadata_length = strlen(key_length) = 10`
-
-Command: `curl http://localhost:8080/cnt/010/4294967296/<key>`
-
-Result: `Code 200`, `text/plain` contains the number of values.
-
 ### Why not put metadata in HTTP headers?
 
 - HTTP headers order are not guaranteed to be retained on receiving because of network nodes interference. Thus, if you want to get one header, you still need to read the whole headers block, split them by `\r\n`, parse them and select the requested values. Furthermore, the headers size are non-determined till the appearance of `\r\n\r\n`.
 - By composing metadata directly into the uri, we can ignore parsing the headers and body.
 
-## Build debug
-
-```bash
-make -f Makefile.debug
-```
-
 ## Benchmarks
 
 ## FAQ
-
-- Does `kadb` support HTTPS, content compression or authentication?
-
-  `kadb` only response as `HTTP/1.0` without content compression or authentication support. Please use reverse proxy like `nginx` to wrap `kadb`.
 
 - What is the size limit of key or value?
 
@@ -159,4 +136,12 @@ make -f Makefile.debug
 
 - Is `kadb` memory efficient?
 
-  `kadb` is specifically designed to be memory efficient. Query result are mapping directly from the AVL tree.
+  `kadb` is specifically designed to be memory efficient. Query data are mapping directly to and from the AVL tree without modification.
+
+- Does `kadb` support HTTPS, content compression or authentication?
+
+  `kadb` always response with `HTTP/1.0` without content compression or authentication support. Please use reverse proxy like `nginx` to wrap `kadb`.
+
+- Does `kadb` has built-in ingress or egress control?
+
+  To focus on the core features, `kadb` support neither ingress or egress control.
