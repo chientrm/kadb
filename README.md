@@ -6,6 +6,7 @@ Lightning fast Immutable Key-Array Database.
 
 - Logging server
 - Uneditable chat room/forum
+- Mailbox
 
 # Why `kadb`?
 
@@ -20,8 +21,6 @@ _n is the total number of key_
 - AVL Tree
 - Array accumulated items length
 - realloc strategy `new memsize = old memsize * 2`
-- HTTP request max size = 1024 bytes
-- Unlimited key length, value length, http response `content-length`
 - Single-threaded
 
 ## Build
@@ -76,23 +75,40 @@ pip install -g pytest
 pytest
 ```
 
-## Test manually
+## Try with `curl`
 
 ### Write value
 
-```bash
-curl -X POST http://localhost:8080/key-1/value1
-curl -X POST http://localhost:8080/key-1/v2
-curl -X POST http://localhost:8080/key-2/value3
-```
+URI format: `/<header_length>/<key_length>/<value_length>/<key>/<value>`
+
+#### Example 1
+
+1. `key_length = 2^32 = 4294967296`
+2. `value_length = 2^64 = 18446744073709600000`
+3. `header_length = strlen(key_length) + strlen(value_length) = 10 + 20 = 30`
+
+Command: `curl -X POST http://localhost:8080/030/4294967296/18446744073709600000/<key>/<value>`
+
+#### Example 2
+
+1. `key_length = 1 = 1`
+2. `value_length = 2 = 2`
+3. `header_length = strlen(key_length) + strlen(value_length) = 1 + 2 = 3`
+
+Command: `curl -X POST http://localhost:8080/003/1/2/<key>/<value>`
 
 ### Read subarray
 
-Read 10 value of key `key-1` from index `0`
+URI format: `/<header_length>/<key_length>/<from>/<count>/<key>`
 
-```bash
-curl http://localhost:8080/key-1/0/10 -o result.bin
-```
+#### Example 1
+
+1.  Let `key_length = 2^32 = 4294967296`
+2. `from = 2^32 = 4294967296`
+3. `count = 2^64 = 18446744073709600000`
+4. `header_length = strlen(key_length) + strlen(from) + strlen(count) = 10 + 10 + 20 = 40`
+
+Command: `curl http://localhost:8080/040/4294967296/4294967296/18446744073709600000/key`
 
 The result header contains
 
@@ -108,6 +124,11 @@ meaning 2 values returned.
 - The next 8 bytes: `8` (Little Endian), `8` - `6` = `2` = length of the second value.
 - The next 6 bytes: `value1`
 - The final 2 bytes: `v2`
+
+### Why not just use HTTP headers?
+
+- HTTP headers order are not guaranteed to be retained on receiving because of network nodes interference. Thus, if you want to get one header, you still need to read the whole headers block, split them by `\r\n`, parse them and select the requested values. Furthermore, the headers size are non-determined until the first appearance of `\r\n\r\n`.
+- By composing metadata directly into the uri, we can ignore parsing the headers and body.
 
 ## Build debug
 
