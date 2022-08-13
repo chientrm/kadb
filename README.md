@@ -71,44 +71,40 @@ Output: `Listening on http://localhost:8080`
 Run test while server is running
 
 ```bash
-pip install -g pytest
-pytest
+pip install pytest
+python -m pytest
 ```
 
 ## Try with `curl`
 
-### Write value
+### Put value
 
-URI format: `/<header_length>/<key_length>/<value_length>/<key>/<value>`
+URI format: `/put/<metadata_length>/<key_length>/<value_length>/<key><1 delim byte><value>`
 
-#### Example 1
+#### Example
 
 1. `key_length = 2^32 = 4294967296`
 2. `value_length = 2^64 = 18446744073709600000`
-3. `header_length = strlen(key_length) + strlen(value_length) = 10 + 20 = 30`
+3. `metadata_length = strlen(key_length) + strlen(value_length) = 10 + 20 = 30`
 
-Command: `curl -X POST http://localhost:8080/030/4294967296/18446744073709600000/<key>/<value>`
+Command: `curl http://localhost:8080/put/030/4294967296/18446744073709600000/<key><1 delim byte><value>`
 
-#### Example 2
+Result: `Code 204`
 
-1. `key_length = 1 = 1`
-2. `value_length = 2 = 2`
-3. `header_length = strlen(key_length) + strlen(value_length) = 1 + 2 = 3`
+_After read by the server, `<1 delim byte>` is replaced by NULL to separate key and value without allocate new memory_
 
-Command: `curl -X POST http://localhost:8080/003/1/2/<key>/<value>`
+### Get values
 
-### Read subarray
+URI format: `/get/<metadata_length>/<key_length>/<from>/<count>/<key>`
 
-URI format: `/<header_length>/<key_length>/<from>/<count>/<key>`
+#### Example
 
-#### Example 1
-
-1.  Let `key_length = 2^32 = 4294967296`
+1. `key_length = 2^32 = 4294967296`
 2. `from = 2^32 = 4294967296`
 3. `count = 2^64 = 18446744073709600000`
-4. `header_length = strlen(key_length) + strlen(from) + strlen(count) = 10 + 10 + 20 = 40`
+4. `metadata_length = strlen(key_length) + strlen(from) + strlen(count) = 10 + 10 + 20 = 40`
 
-Command: `curl http://localhost:8080/040/4294967296/4294967296/18446744073709600000/key`
+Command: `curl http://localhost:8080/get/040/4294967296/4294967296/18446744073709600000/key -o result.bin`
 
 The result header contains
 
@@ -120,14 +116,27 @@ meaning 2 values returned.
 
 `result.bin`:
 
-- First 8 bytes: `6` (Little Endian), length of the first value.
-- The next 8 bytes: `8` (Little Endian), `8` - `6` = `2` = length of the second value.
-- The next 6 bytes: `value1`
-- The final 2 bytes: `v2`
+- First 8 bytes (Little Endian): length of the first value (Ex: `2`).
+- Next 8 bytes (Little Endian): length of the first value + length of the second value (Ex: `2 + 6 = 8`).
+- Next 2 bytes: first value
+- Next 6 bytes: second value
 
-### Why not just use HTTP headers?
+### Count number of values of a key
 
-- HTTP headers order are not guaranteed to be retained on receiving because of network nodes interference. Thus, if you want to get one header, you still need to read the whole headers block, split them by `\r\n`, parse them and select the requested values. Furthermore, the headers size are non-determined until the first appearance of `\r\n\r\n`.
+URI format: `/cnt/<metadata_length>/<key_length>/<key>`
+
+Example
+
+1. `key_length = 2^32 = 4294967296`
+2. `metadata_length = strlen(key_length) = 10`
+
+Command: `curl http://localhost:8080/cnt/010/4294967296/<key>`
+
+Result: `Code 200`, `text/plain` contains the number of values.
+
+### Why not put metadata in HTTP headers?
+
+- HTTP headers order are not guaranteed to be retained on receiving because of network nodes interference. Thus, if you want to get one header, you still need to read the whole headers block, split them by `\r\n`, parse them and select the requested values. Furthermore, the headers size are non-determined till the appearance of `\r\n\r\n`.
 - By composing metadata directly into the uri, we can ignore parsing the headers and body.
 
 ## Build debug
@@ -137,3 +146,17 @@ make -f Makefile.debug
 ```
 
 ## Benchmarks
+
+## FAQ
+
+- Does `kadb` support HTTPS, content compression or authentication?
+
+  `kadb` only response as `HTTP/1.0` without content compression or authentication support. Please use reverse proxy like `nginx` to wrap `kadb`.
+
+- What is the size limit of key or value?
+
+  Theoretically 2^64 bytes. As long as your device can hold.
+
+- Is `kadb` memory efficient?
+
+  `kadb` is specifically designed to be memory efficient. Query result are mapping directly from the AVL tree.
