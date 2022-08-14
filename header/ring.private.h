@@ -4,10 +4,8 @@
 
 #define EVENT_ACCEPT 0
 #define EVENT_READ 1
-#define EVENT_WRITE_NO_DATA 2
+#define EVENT_WRITE_EMPTY 2
 #define EVENT_WRITE_DATA 3
-
-#define BUFFER_SIZE 1024
 
 typedef struct
 {
@@ -17,12 +15,14 @@ typedef struct
 typedef struct
 {
     char type;
+    struct iovec data;
 } EventAccept;
 
 typedef struct
 {
     char type;
     int socket;
+    unsigned long len;
     struct iovec data;
 } EventRead;
 
@@ -30,19 +30,19 @@ typedef struct
 {
     char type;
     int socket;
-} EventWriteNoData;
+} EventWriteEmpty;
 
 typedef struct
 {
     char type;
     int socket;
     struct iovec header;
-    struct iovec acc;
+    struct iovec accs;
     struct iovec data;
 } EventWriteData;
 
 extern struct io_uring ring;
 
-int submit_accept(int socket);
-int submit_read(int socket);
-int write_no_data(int socket, struct iovec *iov);
+int ring_accept(int socket);
+int read_action(int socket, unsigned long len);
+int write_no_data(int socket, struct iovec iov);

@@ -5,9 +5,10 @@
 typedef struct
 {
     unsigned long count;
-    struct iovec acc;
+    unsigned long found;
+    struct iovec accs;
     struct iovec data;
 } DataGetResult;
 
-void data_post(const char *key, const char *value);
-DataGetResult data_get(const char *key, unsigned long from, unsigned long count);
+void data_put(const struct iovec key, const struct iovec value);
+DataGetResult data_get(struct iovec key, unsigned long from, unsigned long count);

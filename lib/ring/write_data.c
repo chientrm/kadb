@@ -5,19 +5,34 @@
 #include <stdio.h>
 #include <string.h>
 
-const char DATA_MESSAGE_FORMAT[] =
-    "HTTP/1.0 200 OK\r\nContent-Type: application/octet-stream\r\nContent-Length: %lu\r\nKadb-Count: %lu\r\n\r\n";
+#define PARAMS_LENGTH 64
 
-int ring_write_data(int socket, unsigned long count, struct iovec acc, struct iovec data)
+char DATA_FMT[] =
+    "HTTP/1.0 200 OK\r\n"
+    "Content-Type: application/octet-stream\r\n"
+    "Content-Length: %lu\r\n"
+    "Kadb-Count: %lu\r\n"
+    "Kadb-found: %lu\r\n\r\n";
+
+int ring_write_data(
+    int socket,
+    unsigned long count,
+    unsigned long found,
+    struct iovec accs,
+    struct iovec data)
 {
     EventWriteData *write = (EventWriteData *)malloc(sizeof(EventWriteData));
     write->type = EVENT_WRITE_DATA;
     write->socket = socket;
-    write->header.iov_base = (char *)malloc(BUFFER_SIZE);
-    sprintf(write->header.iov_base, DATA_MESSAGE_FORMAT, acc.iov_len + data.iov_len, count);
+
+    char *header = (char *)malloc(sizeof(DATA_FMT) * PARAMS_LENGTH);
+    sprintf(header, DATA_FMT, accs.iov_len + data.iov_len, count, found);
     write->header.iov_len = strlen(write->header.iov_base);
-    write->acc = acc;
+    write->header.iov_base = header;
+
+    write->accs = accs;
     write->data = data;
+
     struct io_uring_sqe *sqe = io_uring_get_sqe(&ring);
     io_uring_prep_writev(sqe, write->socket, &write->header, 3, 0);
     io_uring_sqe_set_data(sqe, write);

@@ -1,29 +1,29 @@
 #pragma once
 
+#include <sys/uio.h>
+
 typedef struct
 {
-    unsigned long maxCount;
     unsigned long count;
-    unsigned long data_size;
-    unsigned long *accs;
-    char *data;
-} Value;
+    struct iovec accs;
+    struct iovec data;
+} Array;
 
 typedef struct node
 {
-    char *key;
+    struct iovec key;
     struct node *left;
     struct node *right;
     unsigned long height;
-    Value value;
+    Array array;
 } Node;
 
 extern Node *root;
 
 unsigned long height(Node *node);
-void increase_size_lu(unsigned long *size, unsigned long **ptr);
-void increase_size_char(unsigned long *size, char **ptr);
+void resize_iov(struct iovec data);
 int get_balance(Node *node);
-Node *new_node(const char *key, const char *item);
+Node *new_node(struct iovec key, struct iovec value);
 Node *right_rotate(Node *y);
 Node *left_rotate(Node *x);
+int iovcmp(struct iovec a, struct iovec b);

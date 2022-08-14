@@ -5,11 +5,11 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-void ring_listen(int socket, int max_conns, int (*request_handler)(int, struct iovec))
+void ring_listen(int socket, int max_conns, int (*handle_request)(int, struct iovec))
 {
     io_uring_queue_init(max_conns, &ring, 0);
     struct io_uring_cqe *cqe;
-    submit_accept(socket);
+    ring_accept(socket);
     while (1)
     {
         io_uring_wait_cqe(&ring, &cqe);
@@ -18,24 +18,32 @@ void ring_listen(int socket, int max_conns, int (*request_handler)(int, struct i
         {
         case EVENT_ACCEPT:
         {
-            submit_accept(socket);
-            submit_read(cqe->res);
+            EventAccept *accept = (EventAccept *)event;
+            ring_accept(socket);
+            if (cqe->res >= 0)
+            {
+                ring_read(cqe->res, 0, accept->data);
+            }
             break;
         }
         case EVENT_READ:
         {
             EventRead *read = (EventRead *)event;
-            if (cqe->res > 0)
+            if (cqe->res == read->len)
             {
-                request_handler(read->socket, read->data);
+                handle_request(read->socket, read->data);
             }
-            free(read->data.iov_base);
+            else
+            {
+                free(read->data.iov_base);
+                shutdown(read->socket, SHUT_RDWR);
+            }
             break;
         }
-        case EVENT_WRITE_NO_DATA:
+        case EVENT_WRITE_EMPTY:
         {
-            EventWriteNoData *write_no_data = (EventWriteNoData *)event;
-            shutdown(write_no_data->socket, SHUT_RDWR);
+            EventWriteEmpty *write = (EventWriteEmpty *)event;
+            shutdown(write->socket, SHUT_RDWR);
             break;
         }
         case EVENT_WRITE_DATA:
