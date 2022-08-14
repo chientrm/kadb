@@ -1,11 +1,2 @@
-build
-dist
-Makefile
-Makefile.*
-core.*
-.pytest_cache
-__pycache__
-tmp.bin
-.vscode/settings.json
-*.txt
-*.pcap
+zig-cache
+zig-out
