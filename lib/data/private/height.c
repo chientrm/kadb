@@ -1,4 +1,5 @@
 #include "data.private.h"
+
 #include <stddef.h>
 
 #define MAX(a, b) ((a) > (b) ? (a) : (b))

@@ -19,6 +19,22 @@
         }
       ],
       "cwd": "${workspaceFolder}"
+    },
+    {
+      "type": "cppdbg",
+      "request": "launch",
+      "name": "Open a core dump(c/c++)",
+      "program": "/workspace/kadb/dist/debug/kadb",
+      "coreDumpPath": "${input:coreFileName}",
+      "cwd": "${workspaceFolder}",
+      "MIMode": "gdb"
+    }
+  ],
+  "inputs": [
+    {
+      "id": "coreFileName",
+      "type": "promptString",
+      "description": "Enter core file path"
     }
   ]
 }

@@ -1,4 +1,5 @@
 #include "data.private.h"
+
 #include <stddef.h>
 
 int get_balance(Node *node)

@@ -16,6 +16,7 @@ jobs:
           packages: liburing-dev
           version: 1.0
       - run: python configure.py
+      - run: python check.py
       - run: make
       - run: dist/release/kadb &
       - run: pip install pytest

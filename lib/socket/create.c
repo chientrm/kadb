@@ -1,4 +1,6 @@
 #include "socket.h"
+#include "socket.private.h"
+
 #include <unistd.h>
 #include <netinet/in.h>
 

@@ -1,0 +1,7 @@
+{
+  "scripts": {
+    "loc_header": "find header -name '*.h' | xargs wc -l",
+    "loc_lib": "find lib -name '*.c' | xargs wc -l",
+    "loc": "npm run loc_header && npm run loc_lib"
+  }
+}

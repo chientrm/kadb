@@ -2,11 +2,13 @@ from random import random
 import requests
 import random
 import os
+from urllib.parse import quote
+
 random.seed(1010)
 
 
 def randst(len):
-    return os.urandom(len)
+    return quote(os.urandom(len))
 
 
 def parse_response(found, content):
@@ -22,36 +24,31 @@ def parse_response(found, content):
     return items
 
 
-def put(keys, values):
-    for key in keys:
-        for value in values:
-            key_len = len(key)
-            value_len = len(value)
-            response = requests.put(
-                f'http://localhost:8080/{key_len}{value_len}{key}{value}')
-            assert response.status_code == 204
+def put(key, value):
+    print(key)
+    res = requests.put(
+        f'http://localhost:8080/{len(key):4}{len(value):4}{key}{value}')
+    assert res.status_code == 204
 
 
-def get(keys, values):
+def get(key, values):
     _from, _count = 0, len(values)
-    for key in keys:
-        key_len = len(key)
-        response = requests.get(
-            f'http://localhost:8080/{key_len}{_from}{_count / 2}{key}')
-        count = response.headers['Kadb-count']
-        found = response.headers['Kadb-found']
-        items = parse_response(found, response.content)
-        assert count == _count
-        assert found == count / 2
-        assert(str(items) == str(values))
+    response = requests.get( 
+        f'http://localhost:8080/{len(key):4}{_from:4}{_count:4}{key}')
+    count = response.headers['Kadb-count']
+    found = response.headers['Kadb-found']
+    _values = parse_response(found, response.content)
+    assert count == _count
+    assert found == count
+    assert(str(_values) == str(values))
 
 
 def correctness(n_keys, n_values, key_length, value_length):
     keys = [randst(key_length) for _ in range(n_keys)]
     values = [randst(value_length) for _ in range(n_values)]
-    put(keys, values)
-    # get(keys, values)
+    [put(key, value) for key in keys for value in values]
+    get(keys, values)
 
 
 def test_correctness():
-    correctness(1024, 1024, 1024, 1024)
+    correctness(10, 10, 1024, 1024)

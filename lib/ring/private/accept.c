@@ -1,4 +1,3 @@
-#include "ring.h"
 #include "ring.private.h"
 
 #include <stdlib.h>

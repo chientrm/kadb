@@ -29,15 +29,12 @@ void ring_listen(int socket, int max_conns, int (*handle_request)(int, struct io
         case EVENT_READ:
         {
             EventRead *read = (EventRead *)event;
-            if (cqe->res == read->len)
+            if (cqe->res == read->len && handle_request(read->socket, read->data) == 1)
             {
-                handle_request(read->socket, read->data);
+                break;
             }
-            else
-            {
-                free(read->data.iov_base);
-                shutdown(read->socket, SHUT_RDWR);
-            }
+            free(read->data.iov_base);
+            shutdown(read->socket, SHUT_RDWR);
             break;
         }
         case EVENT_WRITE_EMPTY:
