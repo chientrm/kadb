@@ -1,55 +1,57 @@
 from random import random
 import requests
 import random
+import os
 random.seed(1010)
-
-MAX_KEY_LENGTH = 16
-MAX_VALUE_LENGTH = 990
-
-CHARSETS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
 
 def randst(len):
-    return ''.join(random.choice(CHARSETS) for _ in range(len))
+    return os.urandom(len)
 
 
-n_keys = 10
-n_items = 10
-keys = [randst(MAX_KEY_LENGTH) for _ in range(n_keys)]
-values = [[randst(MAX_VALUE_LENGTH) for _ in range(n_items)]
-          for _ in range(n_keys)]
-
-
-def parse_response(count, content):
+def parse_response(found, content):
     accs = []
     items = []
-    for i in range(int(count)):
+    for i in range(int(found)):
         accs.append(int.from_bytes(content[i*8:(i+1)*8], byteorder='little'))
-    content = content[int(count)*8:]
-    for i in range(int(count)):
+    content = content[int(found)*8:]
+    for i in range(int(found)):
         start = accs[i] - accs[0]
-        end = accs[i+1] - accs[0] if i+1 < int(count) else len(content)
+        end = accs[i+1] - accs[0] if i+1 < int(found) else len(content)
         items.append(content[start:end].decode('ascii'))
     return items
 
 
-def write():
-    for i in range(n_items):
-        for j in range(n_keys):
-            response = requests.post(
-                f'http://localhost:8080/{keys[j]}/{values[j][i]}')
+def put(keys, values):
+    for key in keys:
+        for value in values:
+            key_len = len(key)
+            value_len = len(value)
+            response = requests.put(
+                f'http://localhost:8080/{key_len}{value_len}{key}{value}')
             assert response.status_code == 204
 
 
-def read_and_assert():
-    for j in range(n_keys):
-        response = requests.get(f'http://localhost:8080/{keys[j]}/0/{n_items}')
-        assert response.status_code == 200
+def get(keys, values):
+    _from, _count = 0, len(values)
+    for key in keys:
+        key_len = len(key)
+        response = requests.get(
+            f'http://localhost:8080/{key_len}{_from}{_count / 2}{key}')
         count = response.headers['Kadb-count']
-        items = parse_response(count, response.content)
-        assert all(item == values[j][i] for i, item in enumerate(items))
+        found = response.headers['Kadb-found']
+        items = parse_response(found, response.content)
+        assert count == _count
+        assert found == count / 2
+        assert(str(items) == str(values))
+
+
+def correctness(n_keys, n_values, key_length, value_length):
+    keys = [randst(key_length) for _ in range(n_keys)]
+    values = [randst(value_length) for _ in range(n_values)]
+    put(keys, values)
+    # get(keys, values)
 
 
 def test_correctness():
-    write()
-    read_and_assert()
+    correctness(1024, 1024, 1024, 1024)

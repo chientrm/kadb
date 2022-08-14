@@ -4,7 +4,7 @@
 
 void ring_listen(int socket, int max_conns, int (*handle_request)(int, struct iovec));
 void ring_stop();
-int ring_read(int socket, size_t length, struct iovec data);
+int ring_read(int socket, unsigned long len, struct iovec data);
 int ring_write_empty(int socket);
 int ring_write_data(
     int socket,

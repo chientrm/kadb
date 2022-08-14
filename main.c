@@ -12,20 +12,20 @@
 #define PORT 8080
 #define MAX_CONNS 1024
 #define MAX_QUEUE MAX_CONNS * 5
-#define ACTION_LEN 4
+#define ACTION_LEN 5
 
 typedef struct
 {
     unsigned long key_len;
     unsigned long value_len;
-} PutRequestHeader;
+} PutMeta;
 
 typedef struct
 {
     unsigned long key_len;
     unsigned long from;
     unsigned long count;
-} GetRequestHeader;
+} GetMeta;
 
 int handle_request(int socket, struct iovec req)
 {
@@ -33,12 +33,12 @@ int handle_request(int socket, struct iovec req)
     {
         return ring_read(socket, ACTION_LEN, req);
     }
-    if (req.iov_len == ACTION_LEN && memcmp(req.iov_base, "/put", ACTION_LEN) == 0)
+    if (req.iov_len == ACTION_LEN && memcmp(req.iov_base, "PUT /", ACTION_LEN) == 0)
     {
-        PutRequestHeader *header = (PutRequestHeader *)req.iov_base + ACTION_LEN;
-        unsigned long key_len = header->key_len;
-        unsigned long value_len = header->value_len;
-        unsigned long header_len = sizeof(PutRequestHeader);
+        PutMeta *meta = (PutMeta *)req.iov_base + ACTION_LEN;
+        unsigned long key_len = meta->key_len;
+        unsigned long value_len = meta->value_len;
+        unsigned long header_len = sizeof(PutMeta);
         if (req.iov_len == ACTION_LEN)
         {
             return ring_read(socket, header_len, req);
@@ -60,11 +60,11 @@ int handle_request(int socket, struct iovec req)
             return ring_write_empty(socket);
         }
     }
-    if (req.iov_len == 4 && memcmp(req.iov_base, "/get", ACTION_LEN) == 0)
+    if (req.iov_len == ACTION_LEN && memcmp(req.iov_base, "GET /", ACTION_LEN) == 0)
     {
-        GetRequestHeader *header = (GetRequestHeader *)req.iov_base + ACTION_LEN;
-        unsigned long key_len = header->key_len;
-        unsigned long header_len = sizeof(GetRequestHeader);
+        GetMeta *meta = (GetMeta *)req.iov_base + ACTION_LEN;
+        unsigned long key_len = meta->key_len;
+        unsigned long header_len = sizeof(GetMeta);
         if (req.iov_len == ACTION_LEN)
         {
             return ring_read(socket, header_len, req);
@@ -78,7 +78,7 @@ int handle_request(int socket, struct iovec req)
             struct iovec key = {
                 .iov_len = key_len,
                 .iov_base = req.iov_base + ACTION_LEN + header_len};
-            DataGetResult result = data_get(key, header->from, header->count);
+            DataGetResult result = data_get(key, meta->from, meta->count);
             free(req.iov_base);
             return ring_write_data(socket, result.count, result.found, result.accs, result.data);
         }

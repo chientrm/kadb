@@ -2,6 +2,10 @@
 
 Lightning fast Immutable Key-Array Database.
 
+```
+Warning: `kadb` is still experimental. There would be unexpected breaking changes.
+```
+
 # Common use cases
 
 - Logging server
@@ -78,34 +82,19 @@ python -m pytest
 
 ## Put value
 
-URI format: `/put/<metadata_length>/<key_length>/<value_length>/<key><value>`
-
-#### Example
-
-1. `key_length = 2^32 = 4294967296`
-2. `value_length = 2^64 = 18446744073709600000`
-3. `metadata_length = strlen(key_length) + strlen(value_length) = 10 + 20 = 30`
-
-Command: `curl http://localhost:8080/put/030/4294967296/18446744073709600000/<key><value>`
+```
+curl -X PUT http://localhost:8080/key/value
+```
 
 Result: `Code 204`
 
-_`metadata_length` is always 3 bytes filled with leading `0`_
-
 ## Get values
 
-URI format: `/get/<metadata_length>/<key_length>/<from>/<count>/<key>`
+```
+curl http://localhost:8080/key/from/count -o result.bin
+```
 
-#### Example
-
-1. `key_length = 2^32 = 4294967296`
-2. `from = 2^32 = 4294967296`
-3. `count = 2^64 = 18446744073709600000`
-4. `metadata_length = strlen(key_length) + strlen(from) + strlen(count) = 10 + 10 + 20 = 40`
-
-Command: `curl http://localhost:8080/get/040/4294967296/4294967296/18446744073709600000/<key> -o result.bin`
-
-The result header contains
+The result headers contain
 
 ```
 Kadb-count: 10
@@ -120,11 +109,6 @@ meaning the key has total 10 values and 2 values is found in range `[from:from+c
 - Next 8 bytes (Little Endian): length of the first value + length of the second value (Ex: `2 + 6 = 8`).
 - Next 2 bytes: first value
 - Next 6 bytes: second value
-
-### Why not put metadata in HTTP headers?
-
-- HTTP headers order are not guaranteed to be retained on receiving because of network nodes interference. Thus, if you want to get one header, you still need to read the whole headers block, split them by `\r\n`, parse them and select the requested values. Furthermore, the headers size are non-determined till the appearance of `\r\n\r\n`.
-- By composing metadata directly into the uri, we can ignore parsing the headers and body.
 
 ## Benchmarks
 
