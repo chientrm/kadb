@@ -1,3 +1,4 @@
 {
-  "zig.zigPath": "/workspace/zig/zig"
+  "zig.zigPath": "/workspace/zig/zig",
+  "zig.buildOnSave": true
 }

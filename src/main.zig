@@ -1,24 +1,44 @@
 const std = @import("std");
+const print = std.debug.print;
+const os = std.os;
+const assert = std.debug.assert;
 
-pub fn main() !void {
-    // Prints to stderr (it's a shortcut based on `std.io.getStdErr()`)
-    std.debug.print("All your {s} are belong to us.\n", .{"codebase"});
+pub fn main() void {
+    const one_plus_one: i32 = 1 + 1;
+    print("1 + 1 = {}\n", .{one_plus_one});
 
-    // stdout is for the actual output of your application, for example if you
-    // are implementing gzip, then only the compressed bytes should be sent to
-    // stdout, not any debugging messages.
-    const stdout_file = std.io.getStdOut().writer();
-    var bw = std.io.bufferedWriter(stdout_file);
-    const stdout = bw.writer();
+    const seven_plus_three: f32 = 7.0 / 3.0;
+    print("7 / 3 = {}\n", .{seven_plus_three});
 
-    try stdout.print("Run `zig build test` to run the tests.\n", .{});
+    print("{}\n{}\n{}\n", .{ true and false, true or false, !true });
 
-    try bw.flush(); // don't forget to flush!
-}
+    var optional_value: ?[]const u8 = null;
+    assert(optional_value == null);
 
-test "simple test" {
-    var list = std.ArrayList(i32).init(std.testing.allocator);
-    defer list.deinit(); // try commenting this out and see if zig detects the memory leak!
-    try list.append(42);
-    try std.testing.expectEqual(@as(i32, 42), list.pop());
+    print("\noptional 1\ntype: {s}\nvalue: {?s}\n", .{
+        @typeName(@TypeOf(optional_value)),
+        optional_value,
+    });
+
+    optional_value = "hi";
+    assert(optional_value != null);
+
+    print("\noptional 2\ntype: {s}\nvalue: {?s}\n", .{
+        @typeName(@TypeOf(optional_value)),
+        optional_value,
+    });
+
+    var number_or_error: anyerror!i32 = error.ArgNotFound;
+
+    print("\nerror union 1\ntype: {s}\nvalue: {!?d}\n", .{
+        @typeName(@TypeOf(number_or_error)),
+        number_or_error,
+    });
+
+    number_or_error = 1234;
+
+    print("\nerror union 2\ntype: {s}\nvalue: {!?d}\n", .{
+        @typeName(@TypeOf(number_or_error)),
+        number_or_error,
+    });
 }
