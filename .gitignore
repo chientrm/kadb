@@ -9,3 +9,4 @@ tmp.bin
 .vscode/settings.json
 *.txt
 *.pcap
+.ccls-cache
