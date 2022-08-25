@@ -1,0 +1,9 @@
+{
+  "compilerOptions": {
+    "lib": ["DOM", "ESNext"],
+    "module": "esnext",
+    "target": "esnext",
+    "moduleResolution": "node",
+    "esModuleInterop": true
+  }
+}

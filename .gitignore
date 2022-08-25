@@ -1,12 +1,4 @@
-build
-dist
-Makefile
-Makefile.*
-core.*
-.pytest_cache
-__pycache__
-tmp.bin
-.vscode/settings.json
-*.txt
-*.pcap
-.ccls-cache
+node_modules
+main
+*.js
+.vscode

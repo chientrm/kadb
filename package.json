@@ -1,0 +1,13 @@
+{
+  "name": "/workspace",
+  "module": "index.ts",
+  "type": "module",
+  "scripts": {
+    "dev": "esbuild dev.ts --outfile=dev.js && node dev.js"
+  },
+  "devDependencies": {
+    "@types/node": "^18.7.13",
+    "chokidar": "^3.5.3",
+    "esbuild": "^0.15.5"
+  }
+}
