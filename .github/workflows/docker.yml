@@ -18,6 +18,6 @@ jobs:
       - uses: docker/build-push-action@v3
         with:
           push: true
-          tags: chientrm/kadb:latest
-          cache-from: type=registry,ref=chientrm/kadb:latest
+          tags: chientrm/kadb-devcontainer:latest
+          cache-from: type=registry,ref=chientrm/kadb-devcontainer:latest
           cache-to: type=inline
