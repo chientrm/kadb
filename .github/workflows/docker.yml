@@ -19,3 +19,5 @@ jobs:
         with:
           push: true
           tags: chientrm/kadb:latest
+          cache-from: type=registry,ref=chientrm/kadb:latest
+          cache-to: type=inline
