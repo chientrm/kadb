@@ -1,4 +1,3 @@
 #!/bin/bash
 
-sudo apt-get install\
-  liburing-dev
+apt-get install liburing-dev
