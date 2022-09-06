@@ -1,9 +1,0 @@
-services:
-  container:
-    build: .
-    ports:
-      - "52022:22"
-    volumes:
-      - ${PWD}:/workspace
-      - /root/.ssh/authorized_keys:/root/.ssh/authorized_keys
-    working_dir: /workspace
