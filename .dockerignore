@@ -1,5 +1,8 @@
 .git
+<<<<<<< HEAD
 node_modules
 main
 *.js
 .vscode
+=======
+>>>>>>> 2085406 (fix: merge main to dev)
