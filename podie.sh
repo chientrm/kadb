@@ -1,3 +1,8 @@
 #!/bin/bash
 
-apt-get install liburing-dev
+apt-get install\
+  nodejs\
+  npm\
+  liburing-dev\
+  build-essential\
+  python3\
