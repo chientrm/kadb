@@ -1,8 +1,15 @@
 .git
 <<<<<<< HEAD
+<<<<<<< HEAD
 node_modules
 main
 *.js
 .vscode
 =======
 >>>>>>> 2085406 (fix: merge main to dev)
+=======
+node_modules
+main
+*.js
+.vscode
+>>>>>>> 794c2c6 (fix: merge main to dev)
