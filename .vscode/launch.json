@@ -1,0 +1,24 @@
+{
+  "configurations": [
+    {
+      "name": "(gdb) data",
+      "type": "cppdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/debug_test_data",
+      "MIMode": "gdb",
+      "setupCommands": [
+        {
+          "description": "Enable pretty-printing for gdb",
+          "text": "-enable-pretty-printing",
+          "ignoreFailures": true
+        },
+        {
+          "description": "Set Disassembly Flavor to Intel",
+          "text": "-gdb-set disassembly-flavor intel",
+          "ignoreFailures": true
+        }
+      ],
+      "cwd": "${workspaceFolder}"
+    }
+  ]
+}

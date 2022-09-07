@@ -1,0 +1,7 @@
+digraph {
+students -> tables
+tables -> chairs
+tables -> teacher
+students -> subjects
+subjects -> computers
+}

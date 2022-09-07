@@ -1,2 +1,5 @@
 kadb
-.vscode
+.vscode/settings.json
+test_*
+debug_test_*
+*.dot
