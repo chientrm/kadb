@@ -1,9 +1,10 @@
 #include <liburing.h>
-#include <netinet/in.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+
+#include "socket.h"
 
 #define PORT 8080
 #define MAX_CONNS 1024
@@ -11,12 +12,12 @@
 
 void sigint(int signo)
 {
-  exit(0);
+    exit(0);
 }
 
 int main()
 {
-  signal(SIGINT, sigint);
-  int sock = socket(AF_INET, SOCK_STREAM, 0);
-  return 0;
+    signal(SIGINT, sigint);
+    int sock = socket_create(PORT, MAX_CONNS);
+    return 0;
 }
