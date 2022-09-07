@@ -3,8 +3,6 @@
 apt-get update && apt-get upgrade -y
 
 apt-get install -y \
-  nodejs\
-  npm\
   liburing-dev\
   build-essential\
   python3\
