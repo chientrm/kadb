@@ -9,10 +9,6 @@ typedef struct
     struct iovec raw;
 } DataGetResult;
 
-const int iovcmp(
-    const struct iovec a,
-    const struct iovec b);
-
 const DataGetResult data_get(
     const struct iovec key,
     const size_t offset,

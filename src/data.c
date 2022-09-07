@@ -257,8 +257,7 @@ void serialize(
     int fd,
     const Node *node)
 {
-#define COUNT 6
-    const struct iovec data[COUNT] = {
+    const struct iovec data[6] = {
         node->key,
         data_vec("[shape=record,label=\"{"),
         node->key,
@@ -266,7 +265,7 @@ void serialize(
         {.iov_base = node->array.raw.iov_base,
          .iov_len = node->array.acc_lens[node->array.n_items - 1]},
         data_vec("}\"]\n")};
-    writev(fd, data, COUNT);
+    writev(fd, data, 6);
     if (node->left)
     {
         serialize(fd, node->left);
