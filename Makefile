@@ -7,7 +7,7 @@ kadb: src/data.c src/socket.c src/main.c
 
 test: test_data
 	./test_data
-	diff data.dot data.dot.ground
+	diff data.dot data.ground.dot
 
 debug_test: debug_test_data
 

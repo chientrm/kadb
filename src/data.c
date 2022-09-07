@@ -15,9 +15,8 @@ typedef struct
 {
     size_t max_items;
     size_t n_items;
-    size_t len;
     size_t *acc_lens;
-    uint8_t *raw;
+    struct iovec raw;
 } Array;
 
 typedef struct node
@@ -93,12 +92,11 @@ Node *new_node(
         .array = {
             .max_items = 1,
             .n_items = 1,
-            .len = value.iov_len,
             .acc_lens = malloc(sizeof(size_t)),
-            .raw = malloc(value.iov_len),
+            .raw = {.iov_len = value.iov_len, .iov_base = malloc(value.iov_len)},
         }};
     memcpy(node->key.iov_base, key.iov_base, key.iov_len);
-    memcpy(node->array.raw, value.iov_base, value.iov_len);
+    memcpy(node->array.raw.iov_base, value.iov_base, value.iov_len);
     node->array.acc_lens[0] = value.iov_len;
     return node;
 }
@@ -157,7 +155,7 @@ const DataGetResult data_get(
             .acc_lens = {
                 .iov_base = node->array.acc_lens + offset,
                 .iov_len = n_items * sizeof(size_t)},
-            .raw = {.iov_base = node->array.raw + data_offset, .iov_len = data_len},
+            .raw = {.iov_base = node->array.raw.iov_base + data_offset, .iov_len = data_len},
         };
     }
     return empty_result;
@@ -188,13 +186,13 @@ Node *put(
                     ? array->acc_lens[array->n_items - 2]
                     : 0,
             acc_len = previous_acc_len + value.iov_len;
-        while (acc_len > array->len)
+        while (acc_len > array->raw.iov_len)
         {
-            array->len *= 2;
-            array->raw = realloc(array->raw, array->len * sizeof(uint8_t));
+            array->raw.iov_len *= 2;
+            array->raw.iov_base = realloc(array->raw.iov_base, array->raw.iov_len * sizeof(uint8_t));
         }
         array->acc_lens[array->n_items - 1] = acc_len;
-        memcpy(array->raw + previous_acc_len, value.iov_base, value.iov_len);
+        memcpy(array->raw.iov_base + previous_acc_len, value.iov_base, value.iov_len);
     }
     else if (cmp < 0)
     {
@@ -237,15 +235,21 @@ void data_put(
     root = put(root, key, value);
 }
 
+struct iovec data_vec(u_int8_t *s)
+{
+    return (struct iovec){.iov_len = strlen(s), .iov_base = s};
+}
+
 void write_arrow(
     int fd,
     const struct iovec a,
     const struct iovec b)
 {
-    const struct iovec
-        arrow = {.iov_len = 4, .iov_base = " -> "},
-        new_line = {.iov_len = 1, .iov_base = "\n"},
-        data[4] = {a, arrow, b, new_line};
+    const struct iovec data[4] = {
+        a,
+        data_vec(" -> "),
+        b,
+        data_vec("\n")};
     writev(fd, data, 4);
 }
 
@@ -253,15 +257,25 @@ void serialize(
     int fd,
     const Node *node)
 {
+#define COUNT 6
+    const struct iovec data[COUNT] = {
+        node->key,
+        data_vec("[shape=record,label=\"{"),
+        node->key,
+        data_vec("|"),
+        {.iov_base = node->array.raw.iov_base,
+         .iov_len = node->array.acc_lens[node->array.n_items - 1]},
+        data_vec("}\"]\n")};
+    writev(fd, data, COUNT);
     if (node->left)
     {
-        write_arrow(fd, node->key, node->left->key);
         serialize(fd, node->left);
+        write_arrow(fd, node->key, node->left->key);
     }
     if (node->right)
     {
-        write_arrow(fd, node->key, node->right->key);
         serialize(fd, node->right);
+        write_arrow(fd, node->key, node->right->key);
     }
 }
 

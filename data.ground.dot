@@ -1,0 +1,51 @@
+digraph {
+o[shape=record,label="{o|1}"]
+i[shape=record,label="{i|1}"]
+d[shape=record,label="{d|123}"]
+b[shape=record,label="{b|1}"]
+a[shape=record,label="{a|1}"]
+b -> a
+c[shape=record,label="{c|1}"]
+b -> c
+d -> b
+h[shape=record,label="{h|1}"]
+g[shape=record,label="{g|1}"]
+h -> g
+d -> h
+i -> d
+l[shape=record,label="{l|1}"]
+k[shape=record,label="{k|1}"]
+j[shape=record,label="{j|1}"]
+k -> j
+l -> k
+n[shape=record,label="{n|1}"]
+m[shape=record,label="{m|1}"]
+n -> m
+l -> n
+i -> l
+o -> i
+u[shape=record,label="{u|1}"]
+r[shape=record,label="{r|1}"]
+q[shape=record,label="{q|1}"]
+p[shape=record,label="{p|1}"]
+q -> p
+r -> q
+t[shape=record,label="{t|1}"]
+s[shape=record,label="{s|1}"]
+t -> s
+r -> t
+u -> r
+x[shape=record,label="{x|1}"]
+w[shape=record,label="{w|1}"]
+v[shape=record,label="{v|1}"]
+w -> v
+x -> w
+y[shape=record,label="{y|1}"]
+ef[shape=record,label="{ef|1}"]
+z[shape=record,label="{z|1}"]
+ef -> z
+y -> ef
+x -> y
+u -> x
+o -> u
+}

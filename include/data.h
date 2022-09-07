@@ -22,4 +22,7 @@ void data_put(
     const struct iovec key,
     const struct iovec value);
 
+struct iovec data_vec(
+    u_int8_t *s);
+
 void data_serialize();

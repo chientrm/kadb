@@ -3,3 +3,4 @@ kadb
 test_*
 debug_test_*
 *.dot
+!*.ground.dot
