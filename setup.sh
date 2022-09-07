@@ -2,11 +2,11 @@
 
 apt-get update && apt-get upgrade -y
 
+curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
+
 apt-get install -y \
   liburing-dev\
   build-essential\
-  python3\
-  python3-pip
-pip3 install watchdog
+  nodejs
 
 apt-get autoremove -f -y
