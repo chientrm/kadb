@@ -30,28 +30,30 @@ typedef struct node
 
 Node *root = NULL;
 
+const size_t _height(Node *node)
+{
+    if (node)
+    {
+        return node->height + 1;
+    }
+    return 0;
+}
+
 const size_t height(Node *node)
 {
-    if (node == NULL)
+    if (node)
     {
-        return 0;
+        return MAX(_height(node->left), _height(node->right));
     }
-    size_t
-        left_height = node->left ? node->left->height + 1 : 0,
-        right_height = node->right ? node->right->height + 1 : 0;
-    return MAX(left_height, right_height);
+    return 0;
 }
 
 const int get_balance(Node *node)
 {
-    if (node == NULL)
+    if (node)
     {
-        return 0;
+        return _height(node->left) - _height(node->right);
     }
-    size_t
-        left_height = node->left ? node->left->height + 1 : 0,
-        right_height = node->right ? node->right->height + 1 : 0;
-    return left_height - right_height;
 }
 
 Node *left_rotate(Node *node)
@@ -100,11 +102,6 @@ Node *new_node(
     return node;
 }
 
-const DataGetResult empty_result = {
-    .n_items = 0,
-    .acc_lens = {.iov_base = NULL, .iov_len = 0},
-    .raw = {.iov_base = NULL, .iov_len = 0}};
-
 const int iovcmp(
     const struct iovec a,
     const struct iovec b)
@@ -115,6 +112,91 @@ const int iovcmp(
     }
     return a.iov_len - b.iov_len;
 }
+
+Node *put(
+    Node *node,
+    const struct iovec key,
+    const struct iovec value)
+{
+    if (!node)
+    {
+        return new_node(key, value);
+    }
+    const int cmp = iovcmp(key, node->key);
+    if (cmp == 0)
+    {
+        Array *array = &node->array;
+        array->n_items++;
+        while (array->n_items > array->max_items)
+        {
+            array->max_items *= 2;
+            array->acc_lens = realloc(
+                array->acc_lens,
+                array->max_items * sizeof(size_t));
+        }
+        const size_t
+            previous_acc_len =
+                array->n_items > 1
+                    ? array->acc_lens[array->n_items - 2]
+                    : 0,
+            acc_len = previous_acc_len + value.iov_len;
+        while (acc_len > array->raw.iov_len)
+        {
+            array->raw.iov_len *= 2;
+            array->raw.iov_base = realloc(
+                array->raw.iov_base,
+                array->raw.iov_len * sizeof(uint8_t));
+        }
+        array->acc_lens[array->n_items - 1] = acc_len;
+        memcpy(
+            array->raw.iov_base + previous_acc_len,
+            value.iov_base,
+            value.iov_len);
+        return node;
+    }
+    if (cmp > 0)
+    {
+        node->right = put(node->right, key, value);
+        if (get_balance(node) == -2)
+        {
+            if (iovcmp(key, node->right->key) < 0)
+            {
+                node->right = right_rotate(node->right);
+            }
+            node = left_rotate(node);
+        }
+    }
+    else
+    {
+        node->left = put(node->left, key, value);
+        if (get_balance(node) == 2)
+        {
+            if (iovcmp(key, node->left->key) < 0)
+            {
+                node = right_rotate(node);
+            }
+            else
+            {
+                node->left = left_rotate(node->left);
+                node = right_rotate(node);
+            }
+        }
+    }
+    node->height = height(node);
+    return node;
+}
+
+void data_put(
+    const struct iovec key,
+    const struct iovec value)
+{
+    root = put(root, key, value);
+}
+
+const DataGetResult empty_result = {
+    .n_items = 0,
+    .acc_lens = {.iov_base = NULL, .iov_len = 0},
+    .raw = {.iov_base = NULL, .iov_len = 0}};
 
 const DataGetResult data_get(
     const struct iovec key,
@@ -158,81 +240,6 @@ const DataGetResult data_get(
         };
     }
     return empty_result;
-}
-
-Node *put(
-    Node *node,
-    const struct iovec key,
-    const struct iovec value)
-{
-    if (node == NULL)
-    {
-        return new_node(key, value);
-    }
-    const int cmp = iovcmp(key, node->key);
-    if (cmp == 0)
-    {
-        Array *array = &node->array;
-        array->n_items++;
-        while (array->n_items > array->max_items)
-        {
-            array->max_items *= 2;
-            array->acc_lens = realloc(array->acc_lens, array->max_items * sizeof(size_t));
-        }
-        const size_t
-            previous_acc_len =
-                array->n_items > 1
-                    ? array->acc_lens[array->n_items - 2]
-                    : 0,
-            acc_len = previous_acc_len + value.iov_len;
-        while (acc_len > array->raw.iov_len)
-        {
-            array->raw.iov_len *= 2;
-            array->raw.iov_base = realloc(array->raw.iov_base, array->raw.iov_len * sizeof(uint8_t));
-        }
-        array->acc_lens[array->n_items - 1] = acc_len;
-        memcpy(array->raw.iov_base + previous_acc_len, value.iov_base, value.iov_len);
-        return node;
-    }
-    else if (cmp < 0)
-    {
-        node->left = put(node->left, key, value);
-    }
-    else
-    {
-        node->right = put(node->right, key, value);
-    }
-
-    node->height = 1 + MAX(height(node->left), height(node->right));
-
-    const int balance = get_balance(node);
-    if (balance > 1 && cmp < 0)
-    {
-        return right_rotate(node);
-    }
-    if (balance < -1 && cmp > 0)
-    {
-        return left_rotate(node);
-    }
-    if (balance > 1 && cmp > 0)
-    {
-        node->left = left_rotate(node->left);
-        return right_rotate(node);
-    }
-    if (balance < -1 && cmp < 0)
-    {
-        node->right = right_rotate(node->right);
-        return left_rotate(node);
-    }
-
-    return node;
-}
-
-void data_put(
-    const struct iovec key,
-    const struct iovec value)
-{
-    root = put(root, key, value);
 }
 
 const struct iovec data_vec(u_int8_t *s)
