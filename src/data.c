@@ -24,13 +24,13 @@ typedef struct node
     struct iovec key;
     struct node *left;
     struct node *right;
-    size_t height;
+    uint8_t height;
     Array array;
 } Node;
 
 Node *root = NULL;
 
-const size_t _height(Node *node)
+const uint8_t _height(Node *node)
 {
     if (node)
     {
@@ -39,7 +39,7 @@ const size_t _height(Node *node)
     return 0;
 }
 
-const size_t height(Node *node)
+const uint8_t height(Node *node)
 {
     if (node)
     {
@@ -48,7 +48,7 @@ const size_t height(Node *node)
     return 0;
 }
 
-const int get_balance(Node *node)
+const int8_t get_balance(Node *node)
 {
     if (node)
     {
@@ -152,9 +152,8 @@ Node *put(
             array->raw.iov_base + previous_acc_len,
             value.iov_base,
             value.iov_len);
-        return node;
     }
-    if (cmp > 0)
+    else if (cmp > 0)
     {
         node->right = put(node->right, key, value);
         if (get_balance(node) == -2)
@@ -171,15 +170,11 @@ Node *put(
         node->left = put(node->left, key, value);
         if (get_balance(node) == 2)
         {
-            if (iovcmp(key, node->left->key) < 0)
-            {
-                node = right_rotate(node);
-            }
-            else
+            if (iovcmp(key, node->left->key) > 0)
             {
                 node->left = left_rotate(node->left);
-                node = right_rotate(node);
             }
+            node = right_rotate(node);
         }
     }
     node->height = height(node);
@@ -204,7 +199,7 @@ const DataGetResult data_get(
     const size_t n_items)
 {
     Node *node = root;
-    while (node != NULL)
+    while (node)
     {
         const int cmp = iovcmp(key, node->key);
         if (cmp == 0)
@@ -225,19 +220,21 @@ const DataGetResult data_get(
         const size_t
             result_offset = MIN(offset, node->array.n_items - 1),
             to = MIN(offset + n_items, node->array.n_items),
-            new_n_items = to - result_offset,
+            result_n_items = to - result_offset,
             data_offset =
                 result_offset == 0
                     ? 0
                     : node->array.acc_lens[result_offset - 1],
-            data_len = node->array.acc_lens[to - 1] - data_offset;
+            raw_len = node->array.acc_lens[to - 1] - data_offset;
         return (DataGetResult){
-            .n_items = new_n_items,
+            .n_items = result_n_items,
             .acc_lens = {
-                .iov_base = node->array.acc_lens + offset,
-                .iov_len = n_items * sizeof(size_t)},
-            .raw = {.iov_base = node->array.raw.iov_base + data_offset, .iov_len = data_len},
-        };
+                .iov_len = result_n_items * sizeof(size_t),
+                .iov_base = node->array.acc_lens + offset},
+            .raw = {
+                .iov_len = raw_len,
+                .iov_base = node->array.raw.iov_base + data_offset,
+            }};
     }
     return empty_result;
 }

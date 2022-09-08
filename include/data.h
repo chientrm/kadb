@@ -18,6 +18,10 @@ void data_put(
     const struct iovec key,
     const struct iovec value);
 
+const int iovcmp(
+    const struct iovec a,
+    const struct iovec b);
+
 const struct iovec data_vec(
     u_int8_t *s);
 
