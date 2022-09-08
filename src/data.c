@@ -235,9 +235,9 @@ void data_put(
     root = put(root, key, value);
 }
 
-struct iovec data_vec(u_int8_t *s)
+const struct iovec data_vec(u_int8_t *s)
 {
-    return (struct iovec){.iov_len = strlen(s), .iov_base = s};
+    return (const struct iovec){.iov_len = strlen(s), .iov_base = s};
 }
 
 void write_arrow(
@@ -255,17 +255,24 @@ void write_arrow(
 
 void serialize(
     int fd,
-    const Node *node)
+    Node *node)
 {
-    const struct iovec data[6] = {
+    const struct iovec data[8] = {
         node->key,
         data_vec("[shape=record,label=\"{"),
         node->key,
         data_vec("|"),
-        {.iov_base = node->array.raw.iov_base,
-         .iov_len = node->array.acc_lens[node->array.n_items - 1]},
+        {
+            .iov_len = node->array.acc_lens[node->array.n_items - 1],
+            .iov_base = node->array.raw.iov_base,
+        },
+        data_vec("|"),
+        {
+            .iov_len = sizeof(size_t),
+            .iov_base = &node->array.n_items,
+        },
         data_vec("}\"]\n")};
-    writev(fd, data, 6);
+    writev(fd, data, 8);
     if (node->left)
     {
         serialize(fd, node->left);
