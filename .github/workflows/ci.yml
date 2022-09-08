@@ -9,5 +9,5 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v2
-      - run: ./setup.sh
+      - run: sudo ./setup.sh
       - run: make test
