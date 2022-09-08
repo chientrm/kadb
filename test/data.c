@@ -1,4 +1,7 @@
 #include "data.h"
+#include "data.private.h"
+
+#include "utils.h"
 
 #include <assert.h>
 #include <stddef.h>

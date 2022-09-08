@@ -1,13 +1,6 @@
 #pragma once
 
-#include <sys/uio.h>
-
-typedef struct
-{
-    size_t n_items;
-    struct iovec acc_lens;
-    struct iovec raw;
-} DataGetResult;
+#include "types.h"
 
 const DataGetResult data_get(
     const struct iovec key,
@@ -17,12 +10,3 @@ const DataGetResult data_get(
 void data_put(
     const struct iovec key,
     const struct iovec value);
-
-const int iovcmp(
-    const struct iovec a,
-    const struct iovec b);
-
-const struct iovec data_vec(
-    u_int8_t *s);
-
-void data_serialize();

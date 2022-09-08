@@ -2,7 +2,7 @@ CC = gcc -Iinclude -Werror
 
 all: debug_test test kadb
 
-kadb: src/data.c src/socket.c src/main.c
+kadb: src/data.c src/socket.c src/ring.c src/main.c
 	$(CC) -o $@ $^ -luring
 
 test: test_data

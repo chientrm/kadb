@@ -1,4 +1,7 @@
 #include "data.h"
+#include "data.private.h"
+
+#include "utils.h"
 
 #include <stddef.h>
 #include <stdlib.h>
@@ -100,17 +103,6 @@ Node *new_node(
     memcpy(node->array.raw.iov_base, value.iov_base, value.iov_len);
     node->array.acc_lens[0] = value.iov_len;
     return node;
-}
-
-const int iovcmp(
-    const struct iovec a,
-    const struct iovec b)
-{
-    if (a.iov_len == b.iov_len)
-    {
-        return memcmp(a.iov_base, b.iov_base, a.iov_len);
-    }
-    return a.iov_len - b.iov_len;
 }
 
 Node *put(
@@ -227,6 +219,7 @@ const DataGetResult data_get(
                     : node->array.acc_lens[result_offset - 1],
             raw_len = node->array.acc_lens[to - 1] - data_offset;
         return (DataGetResult){
+            .total_n_items = node->array.n_items,
             .n_items = result_n_items,
             .acc_lens = {
                 .iov_len = result_n_items * sizeof(size_t),
@@ -237,11 +230,6 @@ const DataGetResult data_get(
             }};
     }
     return empty_result;
-}
-
-const struct iovec data_vec(u_int8_t *s)
-{
-    return (const struct iovec){.iov_len = strlen(s), .iov_base = s};
 }
 
 void write_arrow(
