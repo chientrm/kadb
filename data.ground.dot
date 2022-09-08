@@ -1,11 +1,27 @@
 digraph {
-b[shape=record,label="{b|12}"]
-a[shape=record,label="{a|1}"]
+r[shape=record,label="{key=r|max_items=0000000000000001|n_items=0000000000000001|height=0000000000000005|acc_lens=0000000000000005|raw=dummy}"]
+n[shape=record,label="{key=n|max_items=0000000000000001|n_items=0000000000000001|height=0000000000000004|acc_lens=0000000000000005|raw=dummy}"]
+m[shape=record,label="{key=m|max_items=0000000000000001|n_items=0000000000000001|height=0000000000000003|acc_lens=0000000000000005|raw=dummy}"]
+b[shape=record,label="{key=b|max_items=0000000000000001|n_items=0000000000000001|height=0000000000000002|acc_lens=0000000000000002|raw=12}"]
+a[shape=record,label="{key=a|max_items=0000000000000001|n_items=0000000000000001|height=0000000000000001|acc_lens=0000000000000001|raw=1}"]
 b -> a
-efg[shape=record,label="{efg|dummy}"]
-cd[shape=record,label="{cd|3456789}"]
+m -> b
+n -> m
+q[shape=record,label="{key=q|max_items=0000000000000001|n_items=0000000000000001|height=0000000000000003|acc_lens=0000000000000005|raw=dummy}"]
+p[shape=record,label="{key=p|max_items=0000000000000001|n_items=0000000000000001|height=0000000000000002|acc_lens=0000000000000005|raw=dummy}"]
+o[shape=record,label="{key=o|max_items=0000000000000001|n_items=0000000000000001|height=0000000000000001|acc_lens=0000000000000005|raw=dummy}"]
+p -> o
+q -> p
+n -> q
+r -> n
+s[shape=record,label="{key=s|max_items=0000000000000001|n_items=0000000000000001|height=0000000000000004|acc_lens=0000000000000005|raw=dummy}"]
+efg[shape=record,label="{key=efg|max_items=0000000000000001|n_items=0000000000000001|height=0000000000000003|acc_lens=0000000000000005|raw=dummy}"]
+cd[shape=record,label="{key=cd|max_items=0000000000000004|n_items=0000000000000003|height=0000000000000002|acc_lens=00000000000000030000000000000007000000000000000c|raw=3456789dummy}"]
+t[shape=record,label="{key=t|max_items=0000000000000001|n_items=0000000000000001|height=0000000000000000|acc_lens=0000000000000005|raw=dummy}"]
+cd -> t
 efg -> cd
-hijk[shape=record,label="{hijk|dummy}"]
+hijk[shape=record,label="{key=hijk|max_items=0000000000000001|n_items=0000000000000001|height=0000000000000000|acc_lens=0000000000000005|raw=dummy}"]
 efg -> hijk
-b -> efg
+s -> efg
+r -> s
 }

@@ -193,6 +193,7 @@ Node *put(
         }
         array->acc_lens[array->n_items - 1] = acc_len;
         memcpy(array->raw.iov_base + previous_acc_len, value.iov_base, value.iov_len);
+        return node;
     }
     else if (cmp < 0)
     {
@@ -253,26 +254,54 @@ void write_arrow(
     writev(fd, data, 4);
 }
 
+#define SIZE_T_HEX sizeof(size_t) * 2
+
+const struct iovec serialize_size_t_array(
+    uint8_t *s,
+    size_t n_items,
+    size_t *array)
+{
+    for (size_t i = 0; i < n_items; i++)
+    {
+        sprintf(s + i * SIZE_T_HEX, "%0*zx", (int)SIZE_T_HEX, array[i]);
+    }
+    return (const struct iovec){
+        .iov_len = n_items * SIZE_T_HEX,
+        .iov_base = s};
+}
+
+const struct iovec serialize_size_t(
+    uint8_t *s,
+    size_t value)
+{
+    return serialize_size_t_array(s, 1, &value);
+}
+
 void serialize(
     int fd,
     Node *node)
 {
-    const struct iovec data[8] = {
+    uint8_t max_items[SIZE_T_HEX], n_items[SIZE_T_HEX], height[SIZE_T_HEX];
+    uint8_t *acc_lens = alloca(SIZE_T_HEX * node->array.n_items);
+    const struct iovec data[14] = {
         node->key,
-        data_vec("[shape=record,label=\"{"),
+        data_vec("[shape=record,label=\"{key="),
         node->key,
-        data_vec("|"),
+        data_vec("|max_items="),
+        serialize_size_t(max_items, node->array.max_items),
+        data_vec("|n_items="),
+        serialize_size_t(n_items, node->array.n_items),
+        data_vec("|height="),
+        serialize_size_t(height, node->height),
+        data_vec("|acc_lens="),
+        serialize_size_t_array(acc_lens, node->array.n_items, node->array.acc_lens),
+        data_vec("|raw="),
         {
             .iov_len = node->array.acc_lens[node->array.n_items - 1],
             .iov_base = node->array.raw.iov_base,
         },
-        data_vec("|"),
-        {
-            .iov_len = sizeof(size_t),
-            .iov_base = &node->array.n_items,
-        },
         data_vec("}\"]\n")};
-    writev(fd, data, 8);
+    writev(fd, data, 14);
     if (node->left)
     {
         serialize(fd, node->left);
