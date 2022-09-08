@@ -36,7 +36,10 @@ const size_t height(Node *node)
     {
         return 0;
     }
-    return MAX(height(node->left), height(node->right)) + 1;
+    size_t
+        left_height = node->left ? node->left->height + 1 : 0,
+        right_height = node->right ? node->right->height + 1 : 0;
+    return MAX(left_height, right_height);
 }
 
 const int get_balance(Node *node)
@@ -45,7 +48,10 @@ const int get_balance(Node *node)
     {
         return 0;
     }
-    return height(node->left) - height(node->right);
+    size_t
+        left_height = node->left ? node->left->height + 1 : 0,
+        right_height = node->right ? node->right->height + 1 : 0;
+    return left_height - right_height;
 }
 
 Node *left_rotate(Node *node)
