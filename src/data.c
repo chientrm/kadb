@@ -28,7 +28,7 @@ typedef struct node
     Array array;
 } Node;
 
-Node *root;
+Node *root = NULL;
 
 const size_t height(Node *node)
 {
@@ -48,32 +48,26 @@ const int get_balance(Node *node)
     return height(node->left) - height(node->right);
 }
 
-Node *left_rotate(Node *x)
+Node *left_rotate(Node *node)
 {
-    Node *y = x->right;
-    Node *T2 = y->left;
+    Node *right = node->right;
+    node->right = right->left;
+    right->left = node;
 
-    y->left = x;
-    x->right = T2;
-
-    x->height = height(x);
-    y->height = height(y);
-
-    return y;
+    node->height = height(node);
+    right->height = height(right);
+    return right;
 }
 
-Node *right_rotate(Node *y)
+Node *right_rotate(Node *node)
 {
-    Node *x = y->left;
-    Node *T2 = x->right;
+    Node *left = node->left;
+    node->left = left->right;
+    left->right = node;
 
-    x->right = y;
-    y->left = T2;
-
-    y->height = height(y);
-    x->height = height(x);
-
-    return x;
+    node->height = height(node);
+    left->height = height(left);
+    return left;
 }
 
 Node *new_node(
@@ -84,8 +78,7 @@ Node *new_node(
     *node = (Node){
         .key = {
             .iov_len = key.iov_len,
-            .iov_base = malloc(key.iov_len),
-        },
+            .iov_base = malloc(key.iov_len)},
         .left = NULL,
         .right = NULL,
         .height = 0,
