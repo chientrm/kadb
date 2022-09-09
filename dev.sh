@@ -7,6 +7,6 @@ cycle() {
 }
 
 cycle
-while inotifywait -e close_write src include test Makefile; do
+while inotifywait -e close_write src include test Makefile *_test.sh; do
     cycle
 done

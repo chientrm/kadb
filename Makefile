@@ -5,9 +5,10 @@ all: debug_test test kadb
 kadb: src/data.c src/socket.c src/ring.c src/main.c
 	$(CC) -o $@ $^ -luring
 
-test: test_data
+test: test_data kadb
 	./test_data
 	diff data.dot data.ground.dot
+	./correct_test.sh
 
 debug_test: debug_test_data
 
