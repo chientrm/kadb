@@ -149,12 +149,34 @@ void ring_stop()
     io_uring_queue_exit(&ring);
 }
 
+uint8_t BAD_REQUEST_MESSAGE_S[] = "HTTP/1.0 400 Bad Request\r\n\r\n";
+const struct iovec BAD_REQUEST_MESSAGE = {
+    .iov_len = sizeof(BAD_REQUEST_MESSAGE_S) - 1,
+    .iov_base = BAD_REQUEST_MESSAGE_S};
+
+int ring_write_bad_request(int socket)
+{
+    EventReadWrite *write = malloc(sizeof(EventReadWrite));
+    *write = (EventReadWrite){
+        .parent.parent.type = EVENT_WRITE_EMPTY,
+        .socket = socket};
+    struct io_uring_sqe *sqe = io_uring_get_sqe(&ring);
+    io_uring_prep_writev(
+        sqe,
+        socket,
+        &BAD_REQUEST_MESSAGE,
+        1,
+        0);
+    io_uring_sqe_set_data(sqe, write);
+    return io_uring_submit(&ring);
+}
+
 uint8_t EMPTY_MESSAGE_S[] = "HTTP/1.0 204 OK\r\n\r\n";
 const struct iovec EMPTY_MESSAGE = {
     .iov_len = sizeof(EMPTY_MESSAGE_S) - 1,
     .iov_base = EMPTY_MESSAGE_S};
 
-int ring_write_empty(int socket)
+int ring_write_no_content(int socket)
 {
     EventReadWrite *write = malloc(sizeof(EventReadWrite));
     *write = (EventReadWrite){

@@ -95,7 +95,7 @@ int handle_request(
                     ACTION_LEN +
                     PUT_META_SIZE +
                     strntoul(meta->key_len)});
-        return ring_write_empty(socket);
+        return ring_write_no_content(socket);
     }
     // GET
     if (iovcmp(req, GET) == 0)
@@ -123,6 +123,7 @@ int handle_request(
             strntoul(meta->n_items));
         return ring_write_data(socket, result);
     }
+    return ring_write_bad_request(socket);
 }
 
 void sigint(int signo)

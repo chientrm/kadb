@@ -16,7 +16,9 @@ int ring_read(
 
 void ring_stop();
 
-int ring_write_empty(int socket);
+int ring_write_bad_request(int socket);
+
+int ring_write_no_content(int socket);
 
 int ring_write_data(
     int socket,
