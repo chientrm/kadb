@@ -170,7 +170,7 @@
     "method": "GET",
     "sortNum": 90000,
     "created": "2022-09-10T06:51:13.344Z",
-    "modified": "2022-09-10T07:12:13.683Z",
+    "modified": "2022-09-10T11:04:22.438Z",
     "headers": [],
     "params": [],
     "tests": [
@@ -184,7 +184,7 @@
         "type": "res-body",
         "custom": "",
         "action": "equal",
-        "value": "+1234+56"
+        "value": "1234;56;"
       },
       {
         "type": "custom-header",
@@ -209,7 +209,7 @@
     "method": "GET",
     "sortNum": 70000,
     "created": "2022-09-10T06:59:40.575Z",
-    "modified": "2022-09-10T07:11:27.638Z",
+    "modified": "2022-09-10T11:04:09.446Z",
     "headers": [],
     "params": [],
     "tests": [
@@ -223,7 +223,7 @@
         "type": "res-body",
         "custom": "",
         "action": "equal",
-        "value": "+1234"
+        "value": "1234;"
       },
       {
         "type": "custom-header",
@@ -248,7 +248,7 @@
     "method": "GET",
     "sortNum": 100000,
     "created": "2022-09-10T07:12:27.352Z",
-    "modified": "2022-09-10T07:13:50.862Z",
+    "modified": "2022-09-10T11:04:28.696Z",
     "headers": [],
     "params": [],
     "tests": [
@@ -262,7 +262,7 @@
         "type": "res-body",
         "custom": "",
         "action": "equal",
-        "value": "+56"
+        "value": "56;"
       },
       {
         "type": "custom-header",
