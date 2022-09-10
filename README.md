@@ -6,6 +6,7 @@ Lightning fast Immutable Key-Array Database.
 
 - Logging server
 - Uneditable chat room/forum
+- Uneditable mailbox
 
 # Why `kadb`?
 
@@ -19,100 +20,63 @@ _n is the total number of key_
 - Linux's io_uring
 - AVL Tree
 - Array accumulated items length
-- realloc strategy `new memsize = old memsize * 2`
-- HTTP request max size = 1024 bytes
-- Unlimited key length, value length, http response `content-length`
+- realloc strategy `double`
 - Single-threaded
 
-## Build
-
-### Requirements
-
-- Python 3
-- Build essential
-
-### Clone project
-
+## Clone
 ```bash
 git clone https://github.com/chientrm/kadb
 ```
 
-### Build and install liburing
+## Build
 
 ```bash
-cd liburing
+cd kadb
 ./configure
-make
-sudo make install
-cd ..
-```
-
-### Configure
-
-```bash
-python configure.py
-```
-
-### Build release
-
-```bash
-make
+make kadb
 ```
 
 ## Start server
 
 ```bash
-dist/release/kadb
+kadb
 ```
 
-Output: `Listening on http://localhost:8080`
+`Listening on http://localhost:8080`
 
-## Test correctness
+## GET
 
-Run test while server is running
+Get `10` value of key `key-1` from offset `0`
 
 ```bash
-pip install -g pytest
-pytest
+curl http://localhost:8080/key-1/0000/0010
 ```
 
-## Test manually
+Example result
 
-### Write value
+```
+HTTP Header
+------------------------
+Kadb-n_items: 2
+Content-Type: text/plain
+Content-Length: 13
 
+HTTP Body
+------------------------
+value1;value2;
+```
+
+meaning key `key-1` has total 2 items.
+
+## PUT
+
+Put value `1234` to key `abc`.
 ```bash
-curl -X POST http://localhost:8080/key-1/value1
-curl -X POST http://localhost:8080/key-1/v2
-curl -X POST http://localhost:8080/key-2/value3
+curl http://localhost:8080/0003/0004/abc1234
 ```
 
-### Read subarray
-
-Read 10 value of key `key-1` from index `0`
-
-```bash
-curl http://localhost:8080/key-1/0/10 -o result.bin
-```
-
-The result header contains
-
-```
-Kadb-count: 2
-```
-
-meaning 2 values returned.
-
-`result.bin`:
-
-- First 8 bytes: `6` (Little Endian), length of the first value.
-- The next 8 bytes: `8` (Little Endian), `8` - `6` = `2` = length of the second value.
-- The next 6 bytes: `value1`
-- The final 2 bytes: `v2`
-
-## Build debug
-
-```bash
-make -f Makefile.debug
-```
+Result status code `200`
 
 ## Benchmarks
+
+...coming soon...

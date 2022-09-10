@@ -3,30 +3,11 @@ name: CI
 on:
   pull_request:
     branches: [main]
-    paths:
-      - .github/workflows/ci.yml
 
 jobs:
   test:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v2
-      - uses: awalsh128/cache-apt-pkgs-action@latest
-        with:
-          packages: liburing-dev
-          version: 1.0
-      - run: python configure.py
-      - run: make
-      - run: dist/release/kadb &
-      - run: pip install pytest
-      - run: python -m pytest
-      - run: python configure_benchmark.py
-      - run: ./benchmark.sh
-      - uses: actions/upload-artifact@v3
-        with:
-          name: benchmark_get_result
-          path: benchmark_get_result.txt
-      - uses: actions/upload-artifact@v3
-        with:
-          name: benchmark_post_result
-          path: benchmark_post_result.txt
+      - run: sudo ./configure
+      - run: make test
