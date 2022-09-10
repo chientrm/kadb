@@ -11,6 +11,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <sys/stat.h>
+#include <dirent.h>
 
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
@@ -82,23 +83,12 @@ Node *right_rotate(Node *node)
     return left;
 }
 
-FILE *open_file(
-    const struct iovec key)
-{
-    char *filename = alloca(5 + key.iov_len);
-    memcpy(filename, "data/", 5);
-    memcpy(filename + 5, key.iov_base, key.iov_len);
-    filename[5 + key.iov_len] = 0;
-    FILE *f = fopen(filename, "a");
-    return f;
-}
-
-void append_file(
+void write_value(
     const struct iovec key,
     const struct iovec value)
 {
-    FILE *f = open_file(key);
-    fprintf(f, "+%*s", (int)value.iov_len, (char *)value.iov_base);
+    FILE *f = open_key_file(key);
+    fprintf(f, "%*s;", (int)value.iov_len, (char *)value.iov_base);
     fclose(f);
 }
 
@@ -124,10 +114,10 @@ Node *new_node(
             },
         }};
     memcpy(node->key.iov_base, key.iov_base, key.iov_len);
-    ((uint8_t *)node->array.raw.iov_base)[0] = '+';
-    memcpy(node->array.raw.iov_base + 1, value.iov_base, value.iov_len);
+    memcpy(node->array.raw.iov_base, value.iov_base, value.iov_len);
+    ((uint8_t *)node->array.raw.iov_base)[value.iov_len] = ';';
     node->array.acc_lens[0] = value.iov_len + 1;
-    append_file(key, value);
+    write_value(key, value);
     return node;
 }
 
@@ -166,12 +156,12 @@ Node *put(
                 array->raw.iov_len * sizeof(uint8_t));
         }
         array->acc_lens[array->n_items - 1] = acc_len;
-        ((uint8_t *)node->array.raw.iov_base)[previous_acc_len] = '+';
         memcpy(
-            array->raw.iov_base + previous_acc_len + 1,
+            array->raw.iov_base + previous_acc_len,
             value.iov_base,
             value.iov_len);
-        append_file(key, value);
+        ((uint8_t *)node->array.raw.iov_base)[acc_len - 1] = ';';
+        write_value(key, value);
     }
     else if (cmp > 0)
     {
@@ -258,7 +248,36 @@ const DataGetResult data_get(
 
 void data_init()
 {
-    mkdir("data/", S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+    mkdir(DATA_DIR, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+    DIR *dir = opendir(DATA_DIR);
+    if (dir)
+    {
+        struct dirent *entry;
+        while ((entry = readdir(dir)) != NULL)
+        {
+            if (entry->d_type == DT_REG)
+            {
+                const struct iovec
+                    key = {
+                        .iov_len = strlen(entry->d_name),
+                        .iov_base = entry->d_name},
+                    raw = read_key(entry->d_name);
+                size_t from = 0;
+                for (size_t i = 0; i < raw.iov_len; i++)
+                {
+                    if (((uint8_t *)raw.iov_base)[i] == ';')
+                    {
+                        const struct iovec value = {
+                            .iov_len = i - from,
+                            .iov_base = raw.iov_base + from};
+                        data_put(key, value);
+                        from = i + 1;
+                    }
+                }
+            }
+        }
+        closedir(dir);
+    }
 }
 
 void serialize_arrow(

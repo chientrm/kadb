@@ -52,12 +52,12 @@ int main()
         data_get(data_vec("cd"), 0, 2),
         (const DataGetResult){
             .n_items = 3,
-            .raw = data_vec("+345+6789")});
+            .raw = data_vec("345;6789;")});
 
     // get 2 items with invalid len
     result_cmp(
         data_get(data_vec("cd"), 1, 3),
         (const DataGetResult){
             .n_items = 3,
-            .raw = data_vec("+6789+dummy")});
+            .raw = data_vec("6789;dummy;")});
 }
