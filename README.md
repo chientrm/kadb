@@ -1,15 +1,82 @@
-# /workspace
+# kadb
 
-To install dependencies:
+Lightning fast Immutable Key-Array Database.
 
+# Common use cases
+
+- Logging server
+- Uneditable chat room/forum
+- Uneditable mailbox
+
+# Why `kadb`?
+
+- Write value: O(logn)
+- Read subarray: O(logn)
+
+_n is the total number of key_
+
+## Implementation
+
+- Linux's io_uring
+- AVL Tree
+- Array accumulated items length
+- realloc strategy `double`
+- Single-threaded
+
+## Clone
 ```bash
-bun install
+git clone https://github.com/chientrm/kadb
 ```
 
-To run:
+## Build
 
 ```bash
-bun run index.ts
+cd kadb
+./configure
+make kadb
 ```
 
-This project was created using `bun init` in bun v0.1.10. [Bun](https://bun.sh) is a fast all-in-one JavaScript runtime.
+## Start server
+
+```bash
+kadb
+```
+
+`Listening on http://localhost:8080`
+
+## GET
+
+Get `10` value of key `key-1` from offset `0`
+
+```bash
+curl http://localhost:8080/key-1/0000/0010
+```
+
+Example result
+
+```
+HTTP Header
+------------------------
+Kadb-n_items: 2
+Content-Type: text/plain
+Content-Length: 13
+
+HTTP Body
+------------------------
+value1;value2;
+```
+
+meaning key `key-1` has total 2 items.
+
+## PUT
+
+Put value `1234` to key `abc`.
+```bash
+curl http://localhost:8080/0003/0004/abc1234
+```
+
+Result status code `200`
+
+## Benchmarks
+
+...coming soon...

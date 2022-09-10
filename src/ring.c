@@ -199,7 +199,7 @@ int ring_write_no_content(int socket)
 
 uint8_t DATA_FMT[] =
     "HTTP/1.0 200 OK\r\n"
-    "Content-Type: plain/text\r\n"
+    "Content-Type: text/plain\r\n"
     "Content-Length: %zu\r\n"
     "Kadb-n_items: %zu\r\n\r\n";
 
