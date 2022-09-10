@@ -9,7 +9,7 @@
 
 #define PORT 8080
 #define MAX_CONNS 1024
-#define MAX_QUEUE MAX_CONNS * 5
+#define MAX_QUEUE MAX_CONNS * 4
 #define NUM_LEN 4
 
 #define ACTION_LEN 3
@@ -53,7 +53,7 @@ size_t strntoul(const char s[NUM_LEN])
 int handle_request(
     int socket,
     struct iovec req)
-{ 
+{
     const struct iovec
         EMPTY = data_vec(""),
         PUT = data_vec("PUT"),
@@ -72,10 +72,15 @@ int handle_request(
         req.iov_len == ACTION_LEN + PUT_META_SIZE)
     {
         const PutMeta *meta = req.iov_base + ACTION_LEN;
-        return ring_read(
-            socket,
-            strntoul(meta->key_len) + strntoul(meta->value_len),
-            req);
+        if (meta->slash_1 == '/' &&
+            meta->slash_2 == '/' &&
+            meta->slash_3 == '/')
+        {
+            return ring_read(
+                socket,
+                strntoul(meta->key_len) + strntoul(meta->value_len),
+                req);
+        }
     }
     if (iovncmp(req, PUT, ACTION_LEN) == 0 &&
         req.iov_len > ACTION_LEN + PUT_META_SIZE)
@@ -106,7 +111,13 @@ int handle_request(
         req.iov_len == ACTION_LEN + GET_META_SIZE)
     {
         const GetMeta *meta = req.iov_base + ACTION_LEN;
-        return ring_read(socket, strntoul(meta->key_len), req);
+        if (meta->slash_1 == '/' &&
+            meta->slash_2 == '/' &&
+            meta->slash_3 == '/' &&
+            meta->slash_4 == '/')
+        {
+            return ring_read(socket, strntoul(meta->key_len), req);
+        }
     }
     if (iovncmp(req, GET, ACTION_LEN) == 0 &&
         req.iov_len > ACTION_LEN + GET_META_SIZE)

@@ -105,6 +105,10 @@ void ring_listen(
     while (1)
     {
         int ret = io_uring_wait_cqe(&ring, &cqe);
+        if (ret < 0)
+        {
+            continue;
+        }
         Event *event = (Event *)cqe->user_data;
 
         switch (event->type)
