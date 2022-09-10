@@ -10,6 +10,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <stdio.h>
+#include <sys/stat.h>
 
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
@@ -81,6 +82,26 @@ Node *right_rotate(Node *node)
     return left;
 }
 
+FILE *open_file(
+    const struct iovec key)
+{
+    char *filename = alloca(5 + key.iov_len);
+    memcpy(filename, "data/", 5);
+    memcpy(filename + 5, key.iov_base, key.iov_len);
+    filename[5 + key.iov_len] = 0;
+    FILE *f = fopen(filename, "a");
+    return f;
+}
+
+void append_file(
+    const struct iovec key,
+    const struct iovec value)
+{
+    FILE *f = open_file(key);
+    fprintf(f, "+%*s", (int)value.iov_len, (char *)value.iov_base);
+    fclose(f);
+}
+
 Node *new_node(
     const struct iovec key,
     const struct iovec value)
@@ -106,6 +127,7 @@ Node *new_node(
     ((uint8_t *)node->array.raw.iov_base)[0] = '+';
     memcpy(node->array.raw.iov_base + 1, value.iov_base, value.iov_len);
     node->array.acc_lens[0] = value.iov_len + 1;
+    append_file(key, value);
     return node;
 }
 
@@ -149,6 +171,7 @@ Node *put(
             array->raw.iov_base + previous_acc_len + 1,
             value.iov_base,
             value.iov_len);
+        append_file(key, value);
     }
     else if (cmp > 0)
     {
@@ -233,7 +256,12 @@ const DataGetResult data_get(
     return empty_result;
 }
 
-void write_arrow(
+void data_init()
+{
+    mkdir("data/", S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+}
+
+void serialize_arrow(
     int fd,
     const struct iovec a,
     const struct iovec b)
@@ -297,12 +325,12 @@ void serialize(
     if (node->left)
     {
         serialize(fd, node->left);
-        write_arrow(fd, node->key, node->left->key);
+        serialize_arrow(fd, node->key, node->left->key);
     }
     if (node->right)
     {
         serialize(fd, node->right);
-        write_arrow(fd, node->key, node->right->key);
+        serialize_arrow(fd, node->key, node->right->key);
     }
 }
 

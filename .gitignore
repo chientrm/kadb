@@ -3,3 +3,4 @@ test_*
 debug_*
 *.dot
 !*.ground.dot
+data

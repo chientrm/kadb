@@ -14,6 +14,7 @@ void result_cmp(const DataGetResult a, const DataGetResult b)
 
 int main()
 {
+    data_init();
 #define COUNT 15
     u_int8_t *x[COUNT][2] = {
         {"a", "1"},

@@ -2,6 +2,8 @@
 
 #include "types.h"
 
+void data_init();
+
 const DataGetResult data_get(
     const struct iovec key,
     const size_t offset,

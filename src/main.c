@@ -147,6 +147,7 @@ int main()
 {
     signal(SIGINT, sigint);
     int socket = socket_create(PORT, MAX_CONNS);
+    data_init();
     printf("Listening on http://localhost:%d\n", PORT);
     ring_listen(socket, MAX_QUEUE, handle_request);
 }
