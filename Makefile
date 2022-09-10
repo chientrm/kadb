@@ -12,7 +12,6 @@ debug_kadb: src/data.c src/socket.c src/ring.c src/main.c
 test: test_data kadb
 	./test_data
 	diff data.dot data.ground.dot
-	./correct_test.sh
 
 debug_test: debug_test_data
 

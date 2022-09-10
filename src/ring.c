@@ -41,7 +41,6 @@ typedef struct
 {
     EventReadWrite parent;
     struct iovec header;
-    struct iovec acc_lens;
     struct iovec raw;
 } EventWriteData;
 
@@ -82,7 +81,6 @@ int ring_read(
         event->parent.parent.data.iov_base,
         data.iov_base,
         data.iov_len);
-
     struct io_uring_sqe *sqe = io_uring_get_sqe(&ring);
     io_uring_prep_read(
         sqe,
@@ -201,9 +199,8 @@ int ring_write_no_content(int socket)
 
 uint8_t DATA_FMT[] =
     "HTTP/1.0 200 OK\r\n"
-    "Content-Type: application/octet-stream\r\n"
+    "Content-Type: plain/text\r\n"
     "Content-Length: %zu\r\n"
-    "Kadb-total_n_items: %zu\r\n"
     "Kadb-n_items: %zu\r\n\r\n";
 
 int ring_write_data(
@@ -214,8 +211,7 @@ int ring_write_data(
     sprintf(
         header,
         DATA_FMT,
-        result.acc_lens.iov_len + result.raw.iov_len,
-        result.total_n_items,
+        result.raw.iov_len,
         result.n_items);
     EventWriteData *write = malloc(sizeof(EventWriteData));
     *write = (EventWriteData){
@@ -224,14 +220,13 @@ int ring_write_data(
         .header = {
             .iov_len = strlen(header),
             .iov_base = header},
-        .acc_lens = result.acc_lens,
         .raw = result.raw};
     struct io_uring_sqe *sqe = io_uring_get_sqe(&ring);
     io_uring_prep_writev(
         sqe,
         write->parent.socket,
         &write->header,
-        3,
+        2,
         0);
     io_uring_sqe_set_data(sqe, write);
     return io_uring_submit(&ring);

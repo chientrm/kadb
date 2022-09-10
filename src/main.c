@@ -63,6 +63,38 @@ int handle_request(
     {
         return ring_read(socket, ACTION_LEN, req);
     }
+    // GET
+    if (iovcmp(req, GET) == 0)
+    {
+        return ring_read(socket, GET_META_SIZE, req);
+    }
+    if (iovncmp(req, GET, ACTION_LEN) == 0 &&
+        req.iov_len == ACTION_LEN + GET_META_SIZE)
+    {
+        const GetMeta *meta = req.iov_base + ACTION_LEN;
+        if (meta->slash_1 == '/' &&
+            meta->slash_2 == '/' &&
+            meta->slash_3 == '/' &&
+            meta->slash_4 == '/')
+        {
+            return ring_read(socket, strntoul(meta->key_len), req);
+        }
+    }
+    if (iovncmp(req, GET, ACTION_LEN) == 0 &&
+        req.iov_len > ACTION_LEN + GET_META_SIZE)
+    {
+        const GetMeta *meta = req.iov_base + ACTION_LEN;
+        const DataGetResult result = data_get(
+            (const struct iovec){
+                .iov_len = strntoul(meta->key_len),
+                .iov_base =
+                    req.iov_base +
+                    ACTION_LEN +
+                    GET_META_SIZE},
+            strntoul(meta->offset),
+            strntoul(meta->n_items));
+        return ring_write_data(socket, result);
+    }
     // PUT
     if (iovcmp(req, PUT) == 0)
     {
@@ -101,38 +133,6 @@ int handle_request(
                     PUT_META_SIZE +
                     strntoul(meta->key_len)});
         return ring_write_no_content(socket);
-    }
-    // GET
-    if (iovcmp(req, GET) == 0)
-    {
-        return ring_read(socket, GET_META_SIZE, req);
-    }
-    if (iovncmp(req, GET, ACTION_LEN) == 0 &&
-        req.iov_len == ACTION_LEN + GET_META_SIZE)
-    {
-        const GetMeta *meta = req.iov_base + ACTION_LEN;
-        if (meta->slash_1 == '/' &&
-            meta->slash_2 == '/' &&
-            meta->slash_3 == '/' &&
-            meta->slash_4 == '/')
-        {
-            return ring_read(socket, strntoul(meta->key_len), req);
-        }
-    }
-    if (iovncmp(req, GET, ACTION_LEN) == 0 &&
-        req.iov_len > ACTION_LEN + GET_META_SIZE)
-    {
-        const GetMeta *meta = req.iov_base + ACTION_LEN;
-        const DataGetResult result = data_get(
-            (const struct iovec){
-                .iov_len = strntoul(meta->key_len),
-                .iov_base =
-                    req.iov_base +
-                    ACTION_LEN +
-                    GET_META_SIZE},
-            strntoul(meta->offset),
-            strntoul(meta->n_items));
-        return ring_write_data(socket, result);
     }
     return ring_write_bad_request(socket);
 }

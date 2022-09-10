@@ -9,7 +9,6 @@
 void result_cmp(const DataGetResult a, const DataGetResult b)
 {
     assert(a.n_items == b.n_items);
-    assert(iovcmp(a.acc_lens, b.acc_lens) == 0);
     assert(iovcmp(a.raw, b.raw) == 0);
 }
 
@@ -45,24 +44,19 @@ int main()
         data_get(data_vec("d"), 1, 3),
         (const DataGetResult){
             .n_items = 0,
-            .acc_lens = {.iov_len = 0, .iov_base = NULL},
             .raw = {.iov_len = 0, .iov_base = NULL}});
 
     // get 2 items
-    size_t acc_lens_1[2] = {3, 7};
     result_cmp(
         data_get(data_vec("cd"), 0, 2),
         (const DataGetResult){
-            .n_items = 2,
-            .acc_lens = {.iov_len = 2 * sizeof(size_t), .iov_base = acc_lens_1},
-            .raw = data_vec("3456789")});
+            .n_items = 3,
+            .raw = data_vec("+345+6789")});
 
     // get 2 items with invalid len
-    size_t acc_lens_2[2] = {7, 12};
     result_cmp(
         data_get(data_vec("cd"), 1, 3),
         (const DataGetResult){
-            .n_items = 2,
-            .acc_lens = {.iov_len = 2 * sizeof(size_t), .iov_base = acc_lens_2},
-            .raw = data_vec("6789dummy")});
+            .n_items = 3,
+            .raw = data_vec("+6789+dummy")});
 }

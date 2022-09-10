@@ -97,11 +97,15 @@ Node *new_node(
             .max_items = 1,
             .n_items = 1,
             .acc_lens = malloc(sizeof(size_t)),
-            .raw = {.iov_len = value.iov_len, .iov_base = malloc(value.iov_len)},
+            .raw = {
+                .iov_len = value.iov_len + 1,
+                .iov_base = malloc(value.iov_len + 1),
+            },
         }};
     memcpy(node->key.iov_base, key.iov_base, key.iov_len);
-    memcpy(node->array.raw.iov_base, value.iov_base, value.iov_len);
-    node->array.acc_lens[0] = value.iov_len;
+    ((uint8_t *)node->array.raw.iov_base)[0] = '+';
+    memcpy(node->array.raw.iov_base + 1, value.iov_base, value.iov_len);
+    node->array.acc_lens[0] = value.iov_len + 1;
     return node;
 }
 
@@ -119,7 +123,7 @@ Node *put(
     {
         Array *array = &node->array;
         array->n_items++;
-        while (array->n_items > array->max_items)
+        while (array->max_items < array->n_items)
         {
             array->max_items *= 2;
             array->acc_lens = realloc(
@@ -131,8 +135,8 @@ Node *put(
                 array->n_items > 1
                     ? array->acc_lens[array->n_items - 2]
                     : 0,
-            acc_len = previous_acc_len + value.iov_len;
-        while (acc_len > array->raw.iov_len)
+            acc_len = previous_acc_len + value.iov_len + 1;
+        while (array->raw.iov_len < acc_len)
         {
             array->raw.iov_len *= 2;
             array->raw.iov_base = realloc(
@@ -140,8 +144,9 @@ Node *put(
                 array->raw.iov_len * sizeof(uint8_t));
         }
         array->acc_lens[array->n_items - 1] = acc_len;
+        ((uint8_t *)node->array.raw.iov_base)[previous_acc_len] = '+';
         memcpy(
-            array->raw.iov_base + previous_acc_len,
+            array->raw.iov_base + previous_acc_len + 1,
             value.iov_base,
             value.iov_len);
     }
@@ -182,7 +187,6 @@ void data_put(
 
 const DataGetResult empty_result = {
     .n_items = 0,
-    .acc_lens = {.iov_base = NULL, .iov_len = 0},
     .raw = {.iov_base = NULL, .iov_len = 0}};
 
 const DataGetResult data_get(
@@ -209,25 +213,22 @@ const DataGetResult data_get(
     }
     if (node)
     {
+        if (offset >= node->array.n_items || n_items <= 0)
+        {
+            return empty_result;
+        }
         const size_t
-            result_offset = MIN(offset, node->array.n_items - 1),
             to = MIN(offset + n_items, node->array.n_items),
-            result_n_items = to - result_offset,
-            data_offset =
-                result_offset == 0
+            raw_offset =
+                offset == 0
                     ? 0
-                    : node->array.acc_lens[result_offset - 1],
-            raw_len = node->array.acc_lens[to - 1] - data_offset;
+                    : node->array.acc_lens[offset - 1],
+            raw_len = node->array.acc_lens[to - 1] - raw_offset;
         return (DataGetResult){
-            .total_n_items = node->array.n_items,
-            .n_items = result_n_items,
-            .acc_lens = {
-                .iov_len = result_n_items * sizeof(size_t),
-                .iov_base = node->array.acc_lens + offset},
+            .n_items = node->array.n_items,
             .raw = {
                 .iov_len = raw_len,
-                .iov_base = node->array.raw.iov_base + data_offset,
-            }};
+                .iov_base = node->array.raw.iov_base + raw_offset}};
     }
     return empty_result;
 }
