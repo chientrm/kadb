@@ -53,7 +53,7 @@ size_t strntoul(const char s[NUM_LEN])
 int handle_request(
     int socket,
     struct iovec req)
-{
+{ 
     const struct iovec
         EMPTY = data_vec(""),
         PUT = data_vec("PUT"),

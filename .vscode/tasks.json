@@ -1,0 +1,15 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "buildDataDebug",
+            "type": "shell",
+            "command": "make test_data"
+        },
+        {
+            "label": "buildKadbDebug",
+            "type": "shell",
+            "command": "make debug_kadb"
+        }
+    ]
+}

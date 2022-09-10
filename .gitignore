@@ -1,6 +1,6 @@
 kadb
 .vscode/settings.json
 test_*
-debug_test_*
+debug_*
 *.dot
 !*.ground.dot
