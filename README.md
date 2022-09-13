@@ -46,10 +46,10 @@ kadb
 
 ## GET
 
-Get `10` value of key `key-1` from offset `0`
+Get `10` value of key `key-1` (5 bytes length) from offset `0`
 
 ```bash
-curl http://localhost:8080/key-1/0000/0010
+curl http://localhost:8080/0005/0000/0010/key-1
 ```
 
 Example result
